@@ -1,23 +1,9 @@
 import {
   API,
-  APIEvent,
-  CharacteristicEventTypes,
-  CharacteristicGetCallback,
-  CharacteristicSetCallback,
   CharacteristicValue,
-  DynamicPlatformPlugin,
-  HAP,
-  IndependentPlatformPlugin,
   Logger,
   PlatformAccessory,
-  PlatformAccessoryEvent,
-  PlatformConfig,
-  Characteristic,
-  Service,
-  AccessoryConfig,
-  Categories,
-  UnknownContext
-} from 'homebridge'
+  Service} from 'homebridge'
 // import {
 //   CurrentHeatingCoolingState,
 //   TargetHeatingCoolingState,

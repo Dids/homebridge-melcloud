@@ -10,7 +10,7 @@
     ],
     "sourceMap": true,
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "allowJs": true,
     "strict": true,
     "esModuleInterop": true,
@@ -20,6 +20,7 @@
     "declarationMap": true
   },
   "include": [
-    "./src/**/*"
+    "./src/**/*",
+    "./test/**/*"
   ]
 }

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API, Logger } from 'homebridge'
+import { Logger } from 'homebridge'
 // import { Response, ResponseAsJSON } from 'request'
 import { IMELCloudConfig, MELCloudLanguage } from '../config'
 
@@ -10,7 +10,7 @@ import fetch from 'node-fetch'
 import NodePersist from 'node-persist'
 import NodeCache from 'node-cache'
 import objectHash from 'object-hash'
-import {Mutex, MutexInterface, Semaphore, SemaphoreInterface, withTimeout} from 'async-mutex'
+import {Mutex} from 'async-mutex'
 
 const MELCLOUD_API_ROOT = 'https://app.melcloud.com/Mitsubishi.Wifi.Client'
 const MELCLOUD_API_LOGIN = 'Login/ClientLogin'
@@ -27,59 +27,60 @@ export interface ILoginResponse {
   RandomKey: string | null
   AppVersionAnnouncement: string | null
   LoginData: ILoginData | null
-  ListPendingInvite: Array<unknown> | null
-  ListOwnershipChangeRequest: Array<unknown> | null
-  ListPendingAnnouncement: Array<unknown> | null
+  // FIXME: Can't test/mock Array type, need proper types instead!
+  // ListPendingInvite: Array<unknown> | null
+  // ListOwnershipChangeRequest: Array<unknown> | null
+  // ListPendingAnnouncement: Array<unknown> | null
   LoginMinutes: number | null
   LoginAttempts: number | null
 }
 
 export interface ILoginData {
-  ContextKey: string | null
-  Client: number | null
-  Terms: number | null
-  AL: number | null
-  ML: number | null
-  CMI: boolean | null
-  IsStaff: boolean | null
-  CUTF: boolean | null
-  CAA: boolean | null
-  ReceiveCountryNotifications: boolean | null
-  ReceiveAllNotifications: boolean | null
-  CACA: false | null
-  CAGA: false | null
-  MaximumDevices: number | null
-  ShowDiagnostics: false | null
-  Language: MELCloudLanguage | null
-  Country: number | null
-  RealClient: number | null
-  Name: string | null
-  UseFahrenheit: boolean | null
-  Duration: number | null
-  Expiry: string | null // FIXME: Parse as ISO string (2022-06-09T10:40:24.27), also re-use ContextKey until hitting expiration date?
-  CMSC: boolean | null
-  PartnerApplicationVersion: null
-  EmailSettingsReminderShown: boolean | null
-  EmailUnitErrors: number | null
-  EmailCommsErrors: number | null
-  ChartSeriesHidden: number | null
-  IsImpersonated: boolean | null
-  LanguageCode: string | null
-  CountryName: string | null
-  CurrencySymbol: string | null
-  SupportEmailAddress: string | null
-  DateSeperator: string | null
-  TimeSeperator: string | null
-  AtwLogoFile: string | null
-  DECCReport: boolean | null
-  CSVReport1min: boolean | null
-  HidePresetPanel: boolean | null
-  EmailSettingsReminderRequired: boolean | null
-  TermsText: string | null
-  MapView: boolean | null
-  MapZoom: number | null
-  MapLongitude: number | null
-  MapLatitude: number | null
+  ContextKey: string | null;
+  Client: number | null;
+  Terms: number | null;
+  AL: number | null;
+  ML: number | null;
+  CMI: boolean | null;
+  IsStaff: boolean | null;
+  CUTF: boolean | null;
+  CAA: boolean | null;
+  ReceiveCountryNotifications: boolean | null;
+  ReceiveAllNotifications: boolean | null;
+  CACA: boolean | null;
+  CAGA: boolean | null;
+  MaximumDevices: number | null;
+  ShowDiagnostics: boolean | null;
+  Language: MELCloudLanguage | null;
+  Country: number | null;
+  RealClient: number | null;
+  Name: string | null;
+  UseFahrenheit: boolean | null;
+  Duration: number | null;
+  Expiry: string | null; // FIXME: Parse as ISO string (2022-06-09T10:40:24.27), also re-use ContextKey until hitting expiration date?
+  CMSC: boolean | null;
+  PartnerApplicationVersion: number | null;
+  EmailSettingsReminderShown: boolean | null;
+  EmailUnitErrors: number | null;
+  EmailCommsErrors: number | null;
+  ChartSeriesHidden: number | null;
+  IsImpersonated: boolean | null;
+  LanguageCode: string | null;
+  CountryName: string | null;
+  CurrencySymbol: string | null;
+  SupportEmailAddress: string | null;
+  DateSeperator: string | null;
+  TimeSeperator: string | null;
+  AtwLogoFile: string | null;
+  DECCReport: boolean | null;
+  CSVReport1min: boolean | null;
+  HidePresetPanel: boolean | null;
+  EmailSettingsReminderRequired: boolean | null;
+  TermsText: string | null;
+  MapView: boolean | null;
+  MapZoom: number | null;
+  MapLongitude: number | null;
+  MapLatitude: number | null;
 }
 
 export interface IDeviceBuilding {

@@ -33,6 +33,6 @@ module.exports = {
     'no-lonely-if': 'error',
     'no-trailing-spaces': 'error',
     'no-unneeded-ternary': 'error',
-    'one-var': ['error', 'never']
+    'one-var': ['error', 'never'],
   }
 }

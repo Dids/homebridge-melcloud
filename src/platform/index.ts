@@ -1,13 +1,7 @@
 import {
   API,
   APIEvent,
-  CharacteristicEventTypes,
-  CharacteristicGetCallback,
-  CharacteristicSetCallback,
-  CharacteristicValue,
   DynamicPlatformPlugin,
-  HAP,
-  IndependentPlatformPlugin,
   Logger,
   PlatformAccessory,
   PlatformAccessoryEvent,
@@ -16,9 +10,9 @@ import {
   Service
 } from 'homebridge'
 import * as _ from 'lodash'
-import { IDeviceDetails, IDeviceBuilding, IDevice, IMELCloudAPIClient, MELCloudAPIClient } from '../api/client'
+import { IDeviceBuilding, IDevice, IMELCloudAPIClient, MELCloudAPIClient } from '../api/client'
 import { IMELCloudConfig, PLATFORM_NAME, PLUGIN_NAME, validateMELCloudConfig } from '../config'
-import MELCloudBridgedAccessory, { IMELCloudBridgedAccessory } from '../accessory'
+import MELCloudBridgedAccessory from '../accessory'
 
 export interface IMELCloudPlatform extends DynamicPlatformPlugin {
   readonly log: Logger
