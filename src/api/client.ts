@@ -393,6 +393,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
     }
     if (this.config.debug) { this.log.info('login -> response:', JSON.stringify(response)) }
     if (response.LoginData) {
+      // FIXME: This renews the ContextKey on every boot, which should NOT be necessary at all!
       this.ContextKey = response.LoginData.ContextKey
       await this.storage.setItem('ContextKey', this.ContextKey)
       if (response.LoginData.Expiry) {
@@ -403,7 +404,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
         this.ContextKeyExpirationDate.setMilliseconds(0)
         await this.storage.setItem('ContextKeyExpirationDate', this.ContextKeyExpirationDate)
       }
-      // FIXME: This is NEVER updated until ContextKey expires, which takes 1 whole year to happen..
+      // FIXME: This is NEVER updated until ContextKey expires, which takes 1 whole year to happen, unless the plugin or Homebridge is restarted..
       this.UseFahrenheit = response.LoginData.UseFahrenheit
       await this.storage.setItem('UseFahrenheit', this.UseFahrenheit)
     } else {

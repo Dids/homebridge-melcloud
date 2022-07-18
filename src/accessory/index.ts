@@ -968,7 +968,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
 
     // Update temperature display units
     if (this.platform.client.UseFahrenheit) {
-      this.temperatureDisplayUnits = this.platform.client.UseFahrenheit ? TemperatureDisplayUnits.FAHRENHEIT : TemperatureDisplayUnits.CELSIUS
+      this.temperatureDisplayUnits = this.platform.client.UseFahrenheit === true ? TemperatureDisplayUnits.FAHRENHEIT : TemperatureDisplayUnits.CELSIUS
     }
 
     // TODO: Add LockPhysicalControls
@@ -999,7 +999,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
       // - 0 (Automatic)
       // - 1 (First, upmost position)
       // - 7 (Continuous)
-      this.swingMode = deviceInfo.VaneHorizontal == 12 && deviceInfo.VaneVertical == 7 ? SwingMode.SWING_ENABLED : SwingMode.SWING_DISABLED
+      this.swingMode = deviceInfo.VaneHorizontal === 12 && deviceInfo.VaneVertical === 7 ? SwingMode.SWING_ENABLED : SwingMode.SWING_DISABLED
     }
   }
 
@@ -1149,9 +1149,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
         break
 
       case this.api.hap.Characteristic.TemperatureDisplayUnits.UUID:
-        await this.platform.client.updateOptions(value as boolean)
-        // TODO: What is this and do we need it?
-        // this.api.platformAccessory.updateApplicationOptions(value == this.api.hap.Characteristic.TemperatureDisplayUnits.FAHRENHEIT)
+        await this.platform.client.updateOptions(value === this.api.hap.Characteristic.TemperatureDisplayUnits.FAHRENHEIT)
         if (this.platform.config.debug) {
           this.log.info('Sending device data for TemperatureDisplayUnits:', data, 'NOTICE! Triggering platform update with value:', value)
         }
@@ -1167,8 +1165,8 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
 
       case this.api.hap.Characteristic.SwingMode.UUID:
         // TODO: Unconfirmed prototype code, test properly!
-        data.VaneHorizontal = value == this.api.hap.Characteristic.SwingMode.SWING_ENABLED ? 12 : 0
-        data.VaneVertical = value == this.api.hap.Characteristic.SwingMode.SWING_ENABLED ? 7 : 0
+        data.VaneHorizontal = value === this.api.hap.Characteristic.SwingMode.SWING_ENABLED ? 12 : 0
+        data.VaneVertical = value === this.api.hap.Characteristic.SwingMode.SWING_ENABLED ? 7 : 0
         data.EffectiveFlags = 256 + 16 // Combine the tilt angle flags to set them both
         if (this.platform.config.debug) {
           this.log.info('Sending device data for SwingMode:', data)
