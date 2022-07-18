@@ -1,11 +1,9 @@
 import {
   API,
-  Categories,
   CharacteristicValue,
   Logger,
   PlatformAccessory,
   Service,
-  UnknownContext,
 } from 'homebridge'
 // import {
 //   CurrentHeatingCoolingState,
@@ -23,7 +21,6 @@ import {
   DeviceOperationMode,
   IDevice, IDeviceDetails, 
 } from '@/api/client'
-import { Accessory } from 'hap-nodejs'
 
 export interface IMELCloudBridgedAccessory extends Partial<PlatformAccessory> {
   readonly service: Service
