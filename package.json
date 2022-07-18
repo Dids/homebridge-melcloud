@@ -1,9 +1,10 @@
 {
   "displayName": "Homebridge MELCloud",
   "name": "homebridge-melcloud-ts",
-  "version": "0.5.0-rc5",
+  "version": "0.5.0-rc6",
   "description": "Homebridge plugin for MELCloud.",
   "main": "dist/index.js",
+  "type": "module",
   "files": [
     "dist/*.js",
     "dist/**/*.js",
@@ -12,8 +13,8 @@
   "scripts": {
     "clean": "rimraf ./dist ./coverage",
     "build": "rimraf ./dist ./coverage && tsc",
-    "lint": "eslint src/**/*.{ts,tsx} test/**/*.{ts,tsx} --fix",
-    "lint-check": "eslint src/**/*.{ts,tsx} test/**/*.{ts,tsx}",
+    "lint": "eslint src/**/*.ts test/**/*.ts --fix",
+    "lint-check": "eslint src/**/*.ts test/**/*.ts",
     "prepare": "npm run build",
     "prepublishOnly": "npm run lint-check",
     "postpublish": "npm run clean",
@@ -23,7 +24,7 @@
   },
   "engines": {
     "node": ">=16",
-    "homebridge": ">=1.4.0"
+    "homebridge": ">=1.5.0"
   },
   "repository": {
     "type": "git",
@@ -54,31 +55,37 @@
     "async-mutex": "^0.3.2",
     "lodash": "^4.17.21",
     "node-cache": "^5.1.2",
-    "node-fetch": "^3.2.3",
+    "node-fetch": "^3.2.8",
     "node-persist": "^3.1.0",
     "object-hash": "^3.0.0"
   },
   "devDependencies": {
-    "@types/jest": "^27.4.1",
+    "@types/jest": "^28.1.6",
     "@types/lodash": "^4.14.182",
-    "@types/node": "^17.0.25",
+    "@types/node": "^18.0.6",
     "@types/node-cache": "^4.2.5",
-    "@types/node-fetch": "^2.6.1",
+    "@types/node-fetch": "^2.6.2",
     "@types/node-persist": "^3.1.2",
     "@types/object-hash": "^2.2.1",
     "@types/request-promise-native": "^1.0.18",
     "@types/supertest": "^2.0.12",
-    "@typescript-eslint/eslint-plugin": "^5.20.0",
-    "@typescript-eslint/parser": "^5.20.0",
-    "eslint": "^8.13.0",
-    "homebridge": "^1.4.0",
+    "@typescript-eslint/eslint-plugin": "^5.30.6",
+    "@typescript-eslint/parser": "^5.30.6",
+    "dotenv": "^16.0.1",
+    "eslint": "^8.20.0",
+    "eslint-import-resolver-typescript": "^3.2.7",
+    "eslint-plugin-import": "^2.26.0",
+    "homebridge": "^1.3.9",
     "intermock": "^0.2.5",
-    "jest": "^27.5.1",
-    "jest-cli": "^27.5.1",
+    "jest": "^28.1.3",
+    "jest-cli": "^28.1.3",
+    "jest-environment-node": "^28.1.3",
+    "jest-extended": "^3.0.1",
     "rimraf": "^3.0.2",
-    "supertest": "^6.2.2",
-    "ts-jest": "^27.1.4",
-    "ts-node": "^10.7.0",
-    "typescript": "^4.6.3"
+    "supertest": "^6.2.4",
+    "ts-jest": "^28.0.7",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.7.4",
+    "with-local-tmp-dir": "^4.0.11"
   }
 }

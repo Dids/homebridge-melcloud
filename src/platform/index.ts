@@ -7,11 +7,14 @@ import {
   PlatformAccessoryEvent,
   PlatformConfig,
   Characteristic,
-  Service
+  Service,
 } from 'homebridge'
-import * as _ from 'lodash'
-import { IDeviceBuilding, IDevice, IMELCloudAPIClient, MELCloudAPIClient } from '../api/client'
-import { IMELCloudConfig, PLATFORM_NAME, PLUGIN_NAME, validateMELCloudConfig } from '../config'
+import {
+  IDeviceBuilding, IDevice, IMELCloudAPIClient, MELCloudAPIClient, 
+} from '../api/client'
+import {
+  IMELCloudConfig, PLATFORM_NAME, PLUGIN_NAME, validateMELCloudConfig, 
+} from '../config'
 import MELCloudBridgedAccessory from '../accessory'
 
 export interface IMELCloudPlatform extends DynamicPlatformPlugin {
@@ -140,7 +143,7 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
     // this.currentAirInfoExecution = 0
     // this.airInfoExecutionPending = []
 
-    this.log.debug('Finished initializing platform:', this.config.name)
+    if (this.config.debug) { this.log.debug('Finished initializing platform:', this.config.name) }
 
     /*
      * When this event is fired, homebridge restored all cached accessories from disk and did call their respective
@@ -149,12 +152,12 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
      * This event can also be used to start discovery of new accessories.
      */
     this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
-      this.log.debug('Executed didFinishLaunching callback')
+      if (this.config.debug) { this.log.debug('Executed didFinishLaunching callback') }
 
       // run the method to discover / register your devices as accessories
       this.discoverDevices()
         .then(() => {
-          this.log.debug('Device discovery successful')
+          if (this.config.debug) { this.log.debug('Device discovery successful') }
         })
         .catch((err: Error) => {
           this.log.error('Device discovery failed:', err)
@@ -168,7 +171,7 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
    */
   // FIXME: How can se use MELCloudBridgedAccessory her instead of PlatformAccessory?
   configureAccessory(accessory: PlatformAccessory): void {
-    this.log.info('Loading accessory from cache:', accessory.displayName)
+    if (this.config.debug) { this.log.debug('Loading accessory from cache:', accessory.displayName) }
 
     // identify the accessory
     accessory.on(PlatformAccessoryEvent.IDENTIFY, () => {
@@ -264,7 +267,7 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
   // FIXME: This should re-use existing accessories and not always recreate them?!
   //        See here for an example: https://github.com/homebridge/homebridge-plugin-template/blob/master/src/platform.ts
   async getDevices(): Promise<void> {
-    this.log.debug('Getting devices..')
+    if (this.config.debug) { this.log.debug('Getting devices..') }
     return this.client.listDevices()
       .then(buildings => {
         // Prepare an array of accessories
@@ -273,7 +276,7 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
         // Parse and loop through all buildings
         for (const building of buildings) {
           if (building) {
-            this.log.debug('Building:', building)
+            if (this.config.debug) { this.log.debug('Building:', building) }
 
             // (Re)create the accessories
             if (building.Structure) {
@@ -282,7 +285,7 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
               // Parse and loop through all floors
               if (building.Structure.Floors) {
                 for (const floor of building.Structure.Floors) {
-                  this.log.debug('Floor:', floor)
+                  if (this.config.debug) { this.log.debug('Floor:', floor) }
 
                   // (Re)create the accessories
                   this.createAccessories(building, floor.Devices)
@@ -290,7 +293,7 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
                   // Parse and loop through all floor areas
                   if (floor.Areas) {
                     for (const floorArea of floor.Areas) {
-                      this.log.debug('Floor area:', floorArea)
+                      if (this.config.debug) { this.log.debug('Floor area:', floorArea) }
 
                       // (Re)create the accessories
                       this.createAccessories(building, floorArea.Devices)
@@ -302,7 +305,7 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
               // Parse and loop through all building areas
               if (building.Structure.Areas) {
                 for (const buildingArea of building.Structure.Areas) {
-                  this.log.debug('Building area:', buildingArea)
+                  if (this.config.debug) { this.log.debug('Building area:', buildingArea) }
 
                   // (Re)create the accessories
                   this.createAccessories(building, buildingArea.Devices)
@@ -315,7 +318,7 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
   }
 
   async createAccessories(building: IDeviceBuilding, devices: Array<IDevice> | null): Promise<void> {
-    this.log.debug('Creating accessories..')
+    if (this.config.debug) { this.log.debug('Creating accessories..') }
 
     // Loop through all MELCloud devices
     if (devices) {
@@ -332,7 +335,7 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
 
           if (existingAccessory) {
             // the accessory already exists
-            this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName)
+            if (this.config.debug) { this.log.debug('Restoring existing accessory from cache:', existingAccessory.displayName) }
 
             // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
             // existingAccessory.context.device = device;
@@ -342,7 +345,7 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
             // Update existing accessory context
             existingAccessory.context.device = device
             existingAccessory.context.deviceDetails = await this.client.getDevice(device.DeviceID, device.BuildingID)
-            this.api.updatePlatformAccessories([existingAccessory])
+            this.api.updatePlatformAccessories([ existingAccessory ])
 
             // create the accessory handler for the restored accessory
             // this is imported from `platformAccessory.ts`
@@ -354,7 +357,7 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
             // this.log.info('Removing existing accessory from cache:', existingAccessory.displayName);
           } else if (device.DeviceName) {
             // the accessory does not yet exist, so we need to create it
-            this.log.info('Adding new accessory:', device.DeviceName)
+            if (this.config.debug) { this.log.debug('Adding new accessory:', device.DeviceName) }
 
             // create a new accessory
             const accessory = new this.api.platformAccessory(device.DeviceName, uuid)
@@ -369,7 +372,7 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
             new MELCloudBridgedAccessory(this, accessory)
 
             // link the accessory to your platform
-            this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory])
+            this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [ accessory ])
           }
 
           // Create an accessory for each device
@@ -407,7 +410,7 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
           // accessory.serialNumber = device.SerialNumber
           // accessory.airInfo = null
           // accessory.buildingId = building.ID
-          // this.log.debug('Found device:', device.DeviceName)
+          // if (this.config.debug) { this.log.debug('Found device:', device.DeviceName) }
 
           // Add the accessory to our array
           // foundAccessories.push(accessory)

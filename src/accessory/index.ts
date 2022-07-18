@@ -3,7 +3,8 @@ import {
   CharacteristicValue,
   Logger,
   PlatformAccessory,
-  Service} from 'homebridge'
+  Service,
+} from 'homebridge'
 // import {
 //   CurrentHeatingCoolingState,
 //   TargetHeatingCoolingState,
@@ -16,7 +17,9 @@ import {
 // } from 'hap-nodejs/dist/lib/definitions/CharacteristicDefinitions'
 // import { IMELCloudAccessoryConfig, validateMELCloudAccessoryConfig } from '../config'
 import { IMELCloudPlatform } from '../platform'
-import { IDevice, IDeviceDetails } from '../api/client'
+import {
+  IDevice, IDeviceDetails, 
+} from '../api/client'
 
 export interface IMELCloudBridgedAccessory extends Partial<PlatformAccessory> {
   readonly service: Service
@@ -188,6 +191,8 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     }
     this.accessory = accessory
 
+    this.api.hap.Characteristic.Log
+
     // FIXME: Load these from storage? Or forcibly wait for client update to set them instead?
     // initialize accessory state
     this.active = this.api.hap.Characteristic.Active.INACTIVE
@@ -331,7 +336,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Active" characteristic
    */
   async handleActiveGet(): Promise<number> {
-    this.log.debug('Triggered GET Active')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET Active') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -341,7 +346,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxActive = 1
     const currentValue = Math.min(maxActive, Math.max(minActive, this.active))
 
-    this.log.debug('Returning Active with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning Active with value:', currentValue) }
     return currentValue
   }
 
@@ -349,13 +354,16 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to set the "Active" characteristic
    */
   async handleActiveSet(value: CharacteristicValue): Promise<void> {
-    this.log.debug('Triggered SET Active:', value)
+    if (this.platform.config.debug) { this.log.debug('Triggered SET Active:', value) }
 
     const minActive = 0
     const maxActive = 1
     const currentValue = Math.min(maxActive, Math.max(minActive, value as number))
 
+    // FIXME: This may also be where our issue lies?!
     this.active = currentValue
+
+    if (this.platform.config.debug) { this.log.debug('Sending Active with value:', currentValue) }
 
     await this.sendDeviceData(this.api.hap.Characteristic.Active.UUID, this.active)
   }
@@ -364,7 +372,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Current Heater Cooler State" characteristic
    */
   async handleCurrentHeaterCoolerStateGet(): Promise<number> {
-    this.log.debug('Triggered GET CurrentHeaterCoolerState')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET CurrentHeaterCoolerState') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -374,7 +382,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxCurrentHeaterCoolerState = 3
     const currentValue = Math.min(maxCurrentHeaterCoolerState, Math.max(minCurrentHeaterCoolerState, this.currentHeaterCoolerState))
 
-    this.log.debug('Returning CurrentHeaterCoolerState with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning CurrentHeaterCoolerState with value:', currentValue) }
     return currentValue
   }
 
@@ -382,7 +390,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Target Heater Cooler State" characteristic
    */
   async handleTargetHeaterCoolerStateGet(): Promise<number> {
-    this.log.debug('Triggered GET TargetHeaterCoolerState')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET TargetHeaterCoolerState') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -392,7 +400,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxTargetHeaterCoolerState = 2
     const currentValue = Math.min(maxTargetHeaterCoolerState, Math.max(minTargetHeaterCoolerState, this.targetHeaterCoolerState))
 
-    this.log.debug('Returning TargetHeaterCoolerState with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning TargetHeaterCoolerState with value:', currentValue) }
     return currentValue
   }
 
@@ -400,7 +408,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to set the "Target Heater Cooler State" characteristic
    */
   async handleTargetHeaterCoolerStateSet(value: CharacteristicValue): Promise<void> {
-    this.log.debug('Triggered SET TargetHeaterCoolerState:', value)
+    if (this.platform.config.debug) { this.log.debug('Triggered SET TargetHeaterCoolerState:', value) }
 
     const minTargetHeaterCoolerState = 0
     const maxTargetHeaterCoolerState = 2
@@ -415,7 +423,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Current Heating Cooling State" characteristic
    */
   async handleCurrentHeatingCoolingStateGet(): Promise<number> {
-    this.log.debug('Triggered GET CurrentHeatingCoolingState')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET CurrentHeatingCoolingState') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -425,7 +433,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxCurrentHeatingCoolingState = 2
     const currentValue = Math.min(maxCurrentHeatingCoolingState, Math.max(minCurrentHeatingCoolingState, this.currentHeatingCoolingState))
 
-    this.log.debug('Returning CurrentHeatingCoolingState with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning CurrentHeatingCoolingState with value:', currentValue) }
     return currentValue
   }
 
@@ -433,7 +441,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Target Heating Cooling State" characteristic
    */
   async handleTargetHeatingCoolingStateGet(): Promise<number> {
-    this.log.debug('Triggered GET TargetHeatingCoolingState')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET TargetHeatingCoolingState') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -443,7 +451,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxTargetHeatingCoolingState = 3
     const currentValue = Math.min(maxTargetHeatingCoolingState, Math.max(minTargetHeatingCoolingState, this.targetHeatingCoolingState))
 
-    this.log.debug('Returning TargetHeatingCoolingState with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning TargetHeatingCoolingState with value:', currentValue) }
     return currentValue
   }
 
@@ -451,7 +459,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to set the "Target Heating Cooling State" characteristic
    */
   async handleTargetHeatingCoolingStateSet(value: CharacteristicValue): Promise<void> {
-    this.log.debug('Triggered SET TargetHeatingCoolingState:', value)
+    if (this.platform.config.debug) { this.log.debug('Triggered SET TargetHeatingCoolingState:', value) }
 
     const minTargetHeatingCoolingState = 0
     const maxTargetHeatingCoolingState = 3
@@ -466,7 +474,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Current Temperature" characteristic
    */
   async handleCurrentTemperatureGet(): Promise<number> {
-    this.log.debug('Triggered GET CurrentTemperature')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET CurrentTemperature') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -476,7 +484,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxCurrentTemperature = 100
     const currentValue = Math.min(maxCurrentTemperature, Math.max(minCurrentTemperature, this.currentTemperature))
 
-    this.log.debug('Returning CurrentTemperature with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning CurrentTemperature with value:', currentValue) }
     return currentValue
   }
 
@@ -484,7 +492,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Target Temperature" characteristic
    */
   async handleTargetTemperatureGet(): Promise<number> {
-    this.log.debug('Triggered GET TargetTemperature')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET TargetTemperature') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -494,7 +502,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxTargetTemperature = 38
     const currentValue = Math.min(maxTargetTemperature, Math.max(minTargetTemperature, this.targetTemperature))
 
-    this.log.debug('Returning TargetTemperature with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning TargetTemperature with value:', currentValue) }
     return currentValue
   }
 
@@ -502,7 +510,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to set the "Target Temperature" characteristic
    */
   async handleTargetTemperatureSet(value: CharacteristicValue): Promise<void> {
-    this.log.debug('Triggered SET TargetTemperature:', value)
+    if (this.platform.config.debug) { this.log.debug('Triggered SET TargetTemperature:', value) }
 
     const minCurrentTemperature = 10
     const maxCurrentTemperature = 38
@@ -517,7 +525,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Temperature Display Units" characteristic
    */
   async handleTemperatureDisplayUnitsGet(): Promise<number> {
-    this.log.debug('Triggered GET TemperatureDisplayUnits')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET TemperatureDisplayUnits') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -527,7 +535,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxTemperatureDisplayUnits = 1
     const currentValue = Math.min(maxTemperatureDisplayUnits, Math.max(minTemperatureDisplayUnits, this.temperatureDisplayUnits))
 
-    this.log.debug('Returning TemperatureDisplayUnits with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning TemperatureDisplayUnits with value:', currentValue) }
     return currentValue
   }
 
@@ -535,7 +543,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to set the "Temperature Display Units" characteristic
    */
   async handleTemperatureDisplayUnitsSet(value: CharacteristicValue): Promise<void> {
-    this.log.debug('Triggered SET TemperatureDisplayUnits:', value)
+    if (this.platform.config.debug) { this.log.debug('Triggered SET TemperatureDisplayUnits:', value) }
 
     const minTemperatureDisplayUnits = 0
     const maxTemperatureDisplayUnits = 1
@@ -550,13 +558,13 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
   //  * Handle requests to get the current value of the "Current Relative Humidity" characteristic
   //  */
   // handleCurrentRelativeHumidityGet(): number {
-  //   this.log.debug('Triggered GET CurrentRelativeHumidity')
+  //   if (this.platform.config.debug) { this.log.debug('Triggered GET CurrentRelativeHumidity') }
 
   //   const minCurrentRelativeHumidity = 0
   //   const maxCurrentRelativeHumidity = 100
   //   const currentValue = Math.min(maxCurrentRelativeHumidity, Math.max(minCurrentRelativeHumidity, this.currentRelativeHumidity))
 
-  //   this.log.debug('Returning CurrentRelativeHumidity with value:', currentValue)
+  //   if (this.platform.config.debug) { this.log.debug('Returning CurrentRelativeHumidity with value:', currentValue) }
   //   return currentValue
   // }
 
@@ -564,13 +572,13 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
   //  * Handle requests to get the current value of the "Target Relative Humidity" characteristic
   //  */
   // handleTargetRelativeHumidityGet(): number {
-  //   this.log.debug('Triggered GET TargetRelativeHumidity')
+  //   if (this.platform.config.debug) { this.log.debug('Triggered GET TargetRelativeHumidity') }
 
   //   const minTargetRelativeHumidity = 0
   //   const maxTargetRelativeHumidity = 100
   //   const currentValue = Math.min(maxTargetRelativeHumidity, Math.max(minTargetRelativeHumidity, this.targetRelativeHumidity))
 
-  //   this.log.debug('Returning TargetRelativeHumidity with value:', currentValue)
+  //   if (this.platform.config.debug) { this.log.debug('Returning TargetRelativeHumidity with value:', currentValue) }
   //   return currentValue
   // }
 
@@ -578,7 +586,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
   //  * Handle requests to set the "Target Relative Humidity" characteristic
   //  */
   // handleTargetRelativeHumiditySet(value: CharacteristicValue): void {
-  //   this.log.debug('Triggered SET TargetRelativeHumidity:', value)
+  //   if (this.platform.config.debug) { this.log.debug('Triggered SET TargetRelativeHumidity:', value) }
 
   //   const minTargetRelativeHumidity = 0
   //   const maxTargetRelativeHumidity = 100
@@ -591,7 +599,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Cooling Threshold Temperature" characteristic
    */
   async handleCoolingThresholdTemperatureGet(): Promise<number> {
-    this.log.debug('Triggered GET CoolingThresholdTemperature')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET CoolingThresholdTemperature') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -601,7 +609,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxCoolingThresholdTemperature = 35
     const currentValue = Math.min(maxCoolingThresholdTemperature, Math.max(minCoolingThresholdTemperature, this.coolingThresholdTemperature))
 
-    this.log.debug('Returning CoolingThresholdTemperature with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning CoolingThresholdTemperature with value:', currentValue) }
     return currentValue
   }
 
@@ -609,7 +617,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to set the "Cooling Threshold Temperature" characteristic
    */
   async handleCoolingThresholdTemperatureSet(value: CharacteristicValue): Promise<void> {
-    this.log.debug('Triggered SET CoolingThresholdTemperature:', value)
+    if (this.platform.config.debug) { this.log.debug('Triggered SET CoolingThresholdTemperature:', value) }
 
     const minCoolingThresholdTemperature = 10
     const maxCoolingThresholdTemperature = 35
@@ -624,7 +632,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Heating Threshold Temperature" characteristic
    */
   async handleHeatingThresholdTemperatureGet(): Promise<number> {
-    this.log.debug('Triggered GET HeatingThresholdTemperature')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET HeatingThresholdTemperature') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -634,7 +642,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxHeatingThresholdTemperature = 25
     const currentValue = Math.min(maxHeatingThresholdTemperature, Math.max(minHeatingThresholdTemperature, this.heatingThresholdTemperature))
 
-    this.log.debug('Returning HeatingThresholdTemperature with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning HeatingThresholdTemperature with value:', currentValue) }
     return currentValue
   }
 
@@ -642,7 +650,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to set the "Heating Threshold Temperature" characteristic
    */
   async handleHeatingThresholdTemperatureSet(value: CharacteristicValue): Promise<void> {
-    this.log.debug('Triggered SET HeatingThresholdTemperature:', value)
+    if (this.platform.config.debug) { this.log.debug('Triggered SET HeatingThresholdTemperature:', value) }
 
     const minHeatingThresholdTemperature = 0
     const maxHeatingThresholdTemperature = 25
@@ -657,7 +665,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
   //  * Handle requests to get the current value of the "Lock Physical Controls" characteristic
   //  */
   // async handleLockPhysicalControlsGet(): Promise<number> {
-  //   this.log.debug('Triggered GET LockPhysicalControls')
+  //   if (this.platform.config.debug) { this.log.debug('Triggered GET LockPhysicalControls') }
 
   //   // FIXME: This shouldn't be done with every GET request! Or wait, should it?
   //   // Update device info
@@ -667,7 +675,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
   //   const maxLockPhysicalControls = 1
   //   const currentValue = Math.min(maxLockPhysicalControls, Math.max(minLockPhysicalControls, this.lockPhysicalControls))
 
-  //   this.log.debug('Returning LockPhysicalControls with value:', currentValue)
+  //   if (this.platform.config.debug) { this.log.debug('Returning LockPhysicalControls with value:', currentValue) }
   //   return currentValue
   // }
 
@@ -675,7 +683,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
   //  * Handle requests to set the "Lock Physical Controls" characteristic
   //  */
   // async handleLockPhysicalControlsSet(value: CharacteristicValue): Promise<void> {
-  //   this.log.debug('Triggered SET LockPhysicalControls:', value)
+  //   if (this.platform.config.debug) { this.log.debug('Triggered SET LockPhysicalControls:', value) }
 
   //   const minLockPhysicalControls = 0
   //   const maxLockPhysicalControls = 1
@@ -690,7 +698,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Rotation Speed" characteristic
    */
   async handleRotationSpeedGet(): Promise<number> {
-    this.log.debug('Triggered GET RotationSpeed')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET RotationSpeed') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -700,7 +708,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxRotationSpeed = 100
     const currentValue = Math.min(maxRotationSpeed, Math.max(minRotationSpeed, this.rotationSpeed))
 
-    this.log.debug('Returning RotationSpeed with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning RotationSpeed with value:', currentValue) }
     return currentValue
   }
 
@@ -708,7 +716,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to set the "Rotation Speed" characteristic
    */
   async handleRotationSpeedSet(value: CharacteristicValue): Promise<void> {
-    this.log.debug('Triggered SET RotationSpeed:', value)
+    if (this.platform.config.debug) { this.log.debug('Triggered SET RotationSpeed:', value) }
 
     const minRotationSpeed = 0
     const maxRotationSpeed = 100
@@ -723,7 +731,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Swing Mode" characteristic
    */
   async handleSwingModeGet(): Promise<number> {
-    this.log.debug('Triggered GET SwingMode')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET SwingMode') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -733,7 +741,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxSwingMode = 1
     const currentValue = Math.min(maxSwingMode, Math.max(minSwingMode, this.swingMode))
 
-    this.log.debug('Returning SwingMode with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning SwingMode with value:', currentValue) }
     return currentValue
   }
 
@@ -741,7 +749,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to set the "Swing Mode" characteristic
    */
   async handleSwingModeSet(value: CharacteristicValue): Promise<void> {
-    this.log.debug('Triggered SET SwingMode:', value)
+    if (this.platform.config.debug) { this.log.debug('Triggered SET SwingMode:', value) }
 
     const minSwingMode = 0
     const maxSwingMode = 1
@@ -756,7 +764,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Current Horizontal Tilt Angle" characteristic
    */
   async handleCurrentHorizontalTiltAngleGet(): Promise<number> {
-    this.log.debug('Triggered GET CurrentHorizontalTiltAngle')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET CurrentHorizontalTiltAngle') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -766,7 +774,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxCurrentHorizontalTiltAngle = 90
     const currentValue = Math.min(maxCurrentHorizontalTiltAngle, Math.max(minCurrentHorizontalTiltAngle, this.currentHorizontalTiltAngle))
 
-    this.log.debug('Returning CurrentHorizontalTiltAngle with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning CurrentHorizontalTiltAngle with value:', currentValue) }
     return currentValue
   }
 
@@ -774,7 +782,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Target Horizontal Tilt Angle" characteristic
    */
   async handleTargetHorizontalTiltAngleGet(): Promise<number> {
-    this.log.debug('Triggered GET TargetHorizontalTiltAngle')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET TargetHorizontalTiltAngle') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -784,7 +792,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxTargetHorizontalTiltAngle = 90
     const currentValue = Math.min(maxTargetHorizontalTiltAngle, Math.max(minTargetHorizontalTiltAngle, this.targetHorizontalTiltAngle))
 
-    this.log.debug('Returning TargetHorizontalTiltAngle with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning TargetHorizontalTiltAngle with value:', currentValue) }
     return currentValue
   }
 
@@ -792,7 +800,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to set the "Target Horizontal Tilt Angle" characteristic
    */
   async handleTargetHorizontalTiltAngleSet(value: CharacteristicValue): Promise<void> {
-    this.log.debug('Triggered SET TargetHorizontalTiltAngle:', value)
+    if (this.platform.config.debug) { this.log.debug('Triggered SET TargetHorizontalTiltAngle:', value) }
 
     const minTargetHorizontalTiltAngle = -90
     const maxTargetHorizontalTiltAngle = 90
@@ -807,7 +815,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Current Vertical Tilt Angle" characteristic
    */
   async handleCurrentVerticalTiltAngleGet(): Promise<number> {
-    this.log.debug('Triggered GET CurrentVerticalTiltAngle')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET CurrentVerticalTiltAngle') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -817,7 +825,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxCurrentVerticalTiltAngle = 90
     const currentValue = Math.min(maxCurrentVerticalTiltAngle, Math.max(minCurrentVerticalTiltAngle, this.currentVerticalTiltAngle))
 
-    this.log.debug('Returning CurrentVerticalTiltAngle with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning CurrentVerticalTiltAngle with value:', currentValue) }
     return currentValue
   }
 
@@ -825,7 +833,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to get the current value of the "Target Vertical Tilt Angle" characteristic
    */
   async handleTargetVerticalTiltAngleGet(): Promise<number> {
-    this.log.debug('Triggered GET TargetVerticalTiltAngle')
+    if (this.platform.config.debug) { this.log.debug('Triggered GET TargetVerticalTiltAngle') }
 
     // FIXME: This shouldn't be done with every GET request! Or wait, should it?
     // Update device info
@@ -835,7 +843,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const maxTargetVerticalTiltAngle = 90
     const currentValue = Math.min(maxTargetVerticalTiltAngle, Math.max(minTargetVerticalTiltAngle, this.targetVerticalTiltAngle))
 
-    this.log.debug('Returning TargetVerticalTiltAngle with value:', currentValue)
+    if (this.platform.config.debug) { this.log.debug('Returning TargetVerticalTiltAngle with value:', currentValue) }
     return currentValue
   }
 
@@ -843,7 +851,7 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
    * Handle requests to set the "Target Vertical Tilt Angle" characteristic
    */
   async handleTargetVerticalTiltAngleSet(value: CharacteristicValue): Promise<void> {
-    this.log.debug('Triggered SET TargetVerticalTiltAngle:', value)
+    if (this.platform.config.debug) { this.log.debug('Triggered SET TargetVerticalTiltAngle:', value) }
 
     const minTargetVerticalTiltAngle = -90
     const maxTargetVerticalTiltAngle = 90
@@ -871,22 +879,34 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     // const RotationSpeed = this.api.hap.Characteristic.RotationSpeed
     const SwingMode = this.api.hap.Characteristic.SwingMode
 
+    // FIXME: This might be where our issue is with the device showing up as "ON" when it's actually off!?
     // Update active
     this.active = deviceInfo.Power != null && deviceInfo.Power ? Active.ACTIVE : Active.INACTIVE
+    if (this.platform.config.debug) {
+      this.log.debug('Updated Active with value:', this.active, 'from device info:', deviceInfo)
+    }
 
     // Update current heater/heating cooler/cooling state
     if (deviceInfo.Power != null) {
       if (!deviceInfo.Power) {
         this.currentHeatingCoolingState = CurrentHeatingCoolingState.OFF
+        if (this.platform.config.debug) { this.log.debug('Device Power is OFF, setting CurrentHeatingCoolingState to OFF') }
       } else {
+        if (this.platform.config.debug) {this.log.debug('Device Power is ON') }
         switch (deviceInfo.OperationMode) {
           case 1:
             this.currentHeaterCoolerState = CurrentHeaterCoolerState.HEATING
             this.currentHeatingCoolingState = CurrentHeatingCoolingState.HEAT
+            if (this.platform.config.debug) {
+              this.log.debug('currentHeaterCoolerState/currentHeatingCoolingState changed:', this.currentHeaterCoolerState, this.currentHeatingCoolingState)
+            }
             break
           case 3:
             this.currentHeaterCoolerState = CurrentHeaterCoolerState.COOLING
             this.currentHeatingCoolingState = CurrentHeatingCoolingState.COOL
+            if (this.platform.config.debug) {
+              this.log.debug('currentHeaterCoolerState/CurrentHeatingCoolingState changed:', this.currentHeaterCoolerState, this.currentHeatingCoolingState)
+            }
             break
 
           default:
@@ -895,8 +915,13 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
             // FIXME: This no longer applies as we're clamping the values in getters/setters!
             this.currentHeaterCoolerState = 5
             this.currentHeatingCoolingState = 5
+            if (this.platform.config.debug) { this.log.debug('Unknown OperationMode:', deviceInfo.OperationMode) }
             break
         }
+      }
+    } else {
+      if (this.platform.config.debug) {
+        this.log.debug('DeviceInfo.Power is null, assuming OFF')
       }
     }
 
@@ -983,6 +1008,9 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
   async getDeviceInfo(): Promise<IDeviceDetails> {
     const device: IDevice = this.accessory.context.device
     const deviceDetails: IDeviceDetails = await this.platform.client.getDevice(device.DeviceID, device.BuildingID)
+    if (this.platform.config.debug) {
+      this.platform.log.debug(`[${this.accessory.displayName}] Get device details: ${JSON.stringify(deviceDetails)}`)
+    }
     this.accessory.context.deviceDetails = deviceDetails
     return deviceDetails
   }
@@ -1005,10 +1033,16 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
           case this.api.hap.Characteristic.Active.INACTIVE:
             data.Power = false
             data.EffectiveFlags = 1
+            if (this.platform.config.debug) {
+              this.log.debug('Sending device data for Active.INACTIVE:', data)
+            }
             break
 
           case this.api.hap.Characteristic.Active.ACTIVE:
             data.Power = true
+            if (this.platform.config.debug) {
+              this.log.debug('Sending device data for Active.ACTIVE:', data)
+            }
             break
 
           default:
@@ -1022,18 +1056,27 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
             data.Power = true
             data.OperationMode = 1
             data.EffectiveFlags = 1 + 2
+            if (this.platform.config.debug) {
+              this.log.debug('Sending device data for TargetHeaterCoolerState.HEAT:', data)
+            }
             break
 
           case this.api.hap.Characteristic.TargetHeaterCoolerState.COOL:
             data.Power = true
             data.OperationMode = 3
             data.EffectiveFlags = 1 + 2
+            if (this.platform.config.debug) {
+              this.log.debug('Sending device data for TargetHeaterCoolerState.COOL:', data)
+            }
             break
 
           case this.api.hap.Characteristic.TargetHeaterCoolerState.AUTO:
             data.Power = true
             data.OperationMode = 8
             data.EffectiveFlags = 1 + 2
+            if (this.platform.config.debug) {
+              this.log.debug('Sending device data for TargetHeaterCoolerState.AUTO:', data)
+            }
             break
 
           default:
@@ -1046,24 +1089,36 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
           case this.api.hap.Characteristic.TargetHeatingCoolingState.OFF:
             data.Power = false
             data.EffectiveFlags = 1
+            if (this.platform.config.debug) {
+              this.log.debug('Sending device data for TargetHeatingCoolingState.OFF:', data)
+            }
             break
 
           case this.api.hap.Characteristic.TargetHeatingCoolingState.HEAT:
             data.Power = true
             data.OperationMode = 1
             data.EffectiveFlags = 1 + 2
+            if (this.platform.config.debug) {
+              this.log.debug('Sending device data for TargetHeatingCoolingState.HEAT:', data)
+            }
             break
 
           case this.api.hap.Characteristic.TargetHeatingCoolingState.COOL:
             data.Power = true
             data.OperationMode = 3
             data.EffectiveFlags = 1 + 2
+            if (this.platform.config.debug) {
+              this.log.debug('Sending device data for TargetHeatingCoolingState.COOL:', data)
+            }
             break
 
           case this.api.hap.Characteristic.TargetHeatingCoolingState.AUTO:
             data.Power = true
             data.OperationMode = 8
             data.EffectiveFlags = 1 + 2
+            if (this.platform.config.debug) {
+              this.log.debug('Sending device data for TargetHeatingCoolingState.AUTO:', data)
+            }
             break
 
           default:
@@ -1074,27 +1129,42 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
       case this.api.hap.Characteristic.TargetTemperature.UUID:
         data.SetTemperature = value as number
         data.EffectiveFlags = 4
+        if (this.platform.config.debug) {
+          this.log.debug('Sending device data for TargetTemperature:', data)
+        }
         break
 
       case this.api.hap.Characteristic.CoolingThresholdTemperature.UUID:
         data.SetTemperature = value as number
         data.EffectiveFlags = 4
+        if (this.platform.config.debug) {
+          this.log.debug('Sending device data for CoolingThresholdTemperature:', data)
+        }
         break
 
       case this.api.hap.Characteristic.HeatingThresholdTemperature.UUID:
         data.SetTemperature = value as number
         data.EffectiveFlags = 4
+        if (this.platform.config.debug) {
+          this.log.debug('Sending device data for HeatingThresholdTemperature:', data)
+        }
         break
 
       case this.api.hap.Characteristic.TemperatureDisplayUnits.UUID:
         await this.platform.client.updateOptions(value as boolean)
         // TODO: What is this and do we need it?
         // this.api.platformAccessory.updateApplicationOptions(value == this.api.hap.Characteristic.TemperatureDisplayUnits.FAHRENHEIT)
+        if (this.platform.config.debug) {
+          this.log.debug('Sending device data for TemperatureDisplayUnits:', data, 'NOTICE! Triggering platform update with value:', value)
+        }
         break
 
       case this.api.hap.Characteristic.RotationSpeed.UUID:
         data.SetFanSpeed = parseInt((value as number/100.0 * (data.NumberOfFanSpeeds ?? 0)).toFixed(0))
         data.EffectiveFlags = 8
+        if (this.platform.config.debug) {
+          this.log.debug('Sending device data for RotationSpeed:', data)
+        }
         break
 
       case this.api.hap.Characteristic.SwingMode.UUID:
@@ -1102,16 +1172,25 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
         data.VaneHorizontal = value == this.api.hap.Characteristic.SwingMode.SWING_ENABLED ? 12 : 0
         data.VaneVertical = value == this.api.hap.Characteristic.SwingMode.SWING_ENABLED ? 7 : 0
         data.EffectiveFlags = 256 + 16 // Combine the tilt angle flags to set them both
+        if (this.platform.config.debug) {
+          this.log.debug('Sending device data for SwingMode:', data)
+        }
         break
 
       case this.api.hap.Characteristic.TargetHorizontalTiltAngle.UUID:
         data.VaneHorizontal = parseInt(((value as number + 90.0)/45.0 + 1.0).toFixed(0))
         data.EffectiveFlags = 256
+        if (this.platform.config.debug) {
+          this.log.debug('Sending device data for TargetHorizontalTiltAngle:', data)
+        }
         break
 
       case this.api.hap.Characteristic.TargetVerticalTiltAngle.UUID:
         data.VaneVertical = parseInt(((value as number + 90.0) / 45.0 + 1.0).toFixed(0))
         data.EffectiveFlags = 16
+        if (this.platform.config.debug) {
+          this.log.debug('Sending device data for TargetVerticalTiltAngle:', data)
+        }
         break
 
       default:

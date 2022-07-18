@@ -42,6 +42,7 @@ Simply specify you Melcloud credentials and the language id from one of the foll
 + 23	=	hr	Hrvatski
 + 24	=	ro	Română
 + 25	=	sl	Slovenščina
+
 # Credit
 
 Thanks to ilcato for the original project, as well as Simon “mGeek” Rubuano for his work on [reverse engineering Melcloud] (http://mgeek.fr/blog/un-peu-de-reverse-engineering-sur-melcloud).

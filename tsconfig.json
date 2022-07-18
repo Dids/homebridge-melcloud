@@ -8,6 +8,7 @@
       "ES2017",
       "ES2018"
     ],
+    "typeRoots": ["./types", "./src/types", "./node_modules/@types"],
     "sourceMap": true,
     "outDir": "dist",
     "rootDir": ".",

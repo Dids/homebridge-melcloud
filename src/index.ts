@@ -1,7 +1,7 @@
+import { API } from 'homebridge'
 import {
-  API
-} from 'homebridge'
-import { PLATFORM_NAME, PLUGIN_NAME } from './config'
+  PLATFORM_NAME, PLUGIN_NAME, 
+} from './config'
 import MELCloudPlatform from './platform'
 
 // Export to Homebridge

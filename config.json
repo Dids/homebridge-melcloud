@@ -11,7 +11,8 @@
     "name": "MELCloud",
     "language": "0",
     "username": "PUT USERNAME OF YOUR MELCLOUD ACCOUNT HERE",
-    "password": "PUT PASSWORD OF YOUR MELCLOUD ACCOUNT HERE"
+    "password": "PUT PASSWORD OF YOUR MELCLOUD ACCOUNT HERE",
+    "debug": false
   }],
   "accessories": []
 }

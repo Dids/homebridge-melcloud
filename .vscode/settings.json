@@ -1,13 +1,70 @@
 {
-  "standard.autoFixOnSave": false,
-  "standard.enable": false,
-  "editor.tabSize": 2,
-  "typescript.format.insertSpaceBeforeFunctionParenthesis": true,
-  "editor.detectIndentation": false,
-  "files.exclude": {
-    "node_modules/": true
-  },
+  // "standard.autoFixOnSave": false,
+  // "standard.enable": false,
+  // "editor.tabSize": 2,
+  // "typescript.format.insertSpaceBeforeFunctionParenthesis": true,
+  // "editor.detectIndentation": false,
+  // "files.exclude": {
+  //   "node_modules/": true
+  // },
+  // "editor.codeActionsOnSave": {
+  //   "source.fixAll.eslint": true
+  // }
+
+  // Set indentation defaults
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+
+  // Enable formatting on paste and save
+  "editor.formatOnPaste": false,
+  "editor.formatOnSave": false,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  }
+    "source.fixAll.eslint": true,
+  },
+
+  // Enable HTML, JSON, JavaScript and TypeScript formatting (+ Vetur)
+  "html.format.enable": false,
+  "json.format.enable": false,
+  "javascript.format.enable": false,
+  "typescript.format.enable": false,
+
+  // Enable PHP formatting
+  "intelephense.format.enable": true,
+
+  // Enable ESLint formatting
+  "eslint.format.enable": true,
+  "eslint.codeActionsOnSave.mode": "all",
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    // "html",
+    // "css",
+    // "scss",
+    // FIXME: Do lint JSON, but with a different rule set!
+    // "json"
+  ],
+
+  // Disable Standard
+  "standard.enable": false,
+  "standard.validate": [
+    "javascript",
+    "javascriptreact",
+  ],
+  
+  // Ensure all lines end with a new line
+  "files.eol": "\n",
+
+  // Override TypeScript SDK path to use locally installed version
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  // Automatically update import paths when moving files
+  "typescript.updateImportsOnFileMove.enabled": "always",
+
+  // Disable GitLens
+  // "gitlens.blame.line.enabled": false,// was working in previous versions
+  // "gitlens.currentLine.enabled": false,// in modern version
+  // "gitlens.codeLens.authors.enabled": false,
+  // "gitlens.codeLens.recentChange.enabled": false,
 }

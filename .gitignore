@@ -1,3 +1,6 @@
+# Jest coverage
+.coverage/
+
 # Created by https://www.gitignore.io/api/node,linux,macos,windows,visualstudiocode
 
 ### TypeScript ###
@@ -6,6 +9,7 @@ dist/
 ### dotenv ###
 .env
 .env*
+!.env.sample
 
 ### npm-cache ###
 npm/

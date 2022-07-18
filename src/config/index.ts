@@ -1,4 +1,6 @@
-import { AccessoryConfig, PlatformConfig } from 'homebridge'
+import {
+  AccessoryConfig, PlatformConfig, 
+} from 'homebridge'
 
 /**
  * This is the name of the platform that users will use to register the plugin in the Homebridge config.json
@@ -43,6 +45,7 @@ export interface IMELCloudConfig extends PlatformConfig {
   language: MELCloudLanguage
   username: string
   password: string
+  debug: boolean
 }
 
 export function validateMELCloudConfig(config: IMELCloudConfig): void {
@@ -54,6 +57,9 @@ export function validateMELCloudConfig(config: IMELCloudConfig): void {
   }
   if (!config.password) {
     throw new Error('MELCloud config is missing password')
+  }
+  if (!config.debug) {
+    config.debug = false
   }
 }
 
