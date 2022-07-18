@@ -55,10 +55,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - run: npm install
-      ## FIXME: Switch to a newer action for publishing the package
-      # run: npm publish . --tag dev
+      ## FIXME: As this is for testing the latest development builds,
+      ##        we'd ideally also need to deploy final releases with this!
       - uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_TOKEN }}
           tag: dev
-          check-version: true
+          # check-version: true
