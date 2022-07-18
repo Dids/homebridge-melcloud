@@ -191,8 +191,6 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     }
     this.accessory = accessory
 
-    this.api.hap.Characteristic.Log
-
     // FIXME: Load these from storage? Or forcibly wait for client update to set them instead?
     // initialize accessory state
     this.active = this.api.hap.Characteristic.Active.INACTIVE
