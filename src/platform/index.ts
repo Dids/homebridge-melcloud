@@ -11,11 +11,11 @@ import {
 } from 'homebridge'
 import {
   IDeviceBuilding, IDevice, IMELCloudAPIClient, MELCloudAPIClient, 
-} from '../api/client'
+} from '@/api/client'
 import {
   IMELCloudConfig, PLATFORM_NAME, PLUGIN_NAME, validateMELCloudConfig, 
-} from '../config'
-import MELCloudBridgedAccessory from '../accessory'
+} from '@/config'
+import MELCloudBridgedAccessory from '@/accessory'
 
 export interface IMELCloudPlatform extends DynamicPlatformPlugin {
   readonly log: Logger

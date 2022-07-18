@@ -3,7 +3,7 @@ import { Logger } from 'homebridge'
 // import { Response, ResponseAsJSON } from 'request'
 import {
   IMELCloudConfig, MELCloudLanguage, 
-} from '../config'
+} from '@/config'
 
 // import request from 'request-promise-native'
 import fetch from 'node-fetch'

@@ -2,6 +2,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "sourceMap": false,
+    "inlineSources": false,
+    "declaration": false,
+    "emitDeclarationOnly": false,
+    "declarationMap": false,
     "noUnusedLocals": true
   },
   "include": ["src"]

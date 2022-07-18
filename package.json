@@ -1,21 +1,18 @@
 {
   "displayName": "Homebridge MELCloud",
   "name": "homebridge-melcloud-ts",
-  "version": "0.5.0-rc10",
+  "version": "0.5.0-rc11",
   "description": "Homebridge plugin for MELCloud.",
-  "exports": {
-    "import": "./dist/index.js"
-  },
-  "type": "module",
+  "main": "dist/index.js",
   "files": [
     "dist/*.js",
     "dist/**/*.js",
-    "dist/**/*.d.ts",
     "config.schema.json"
   ],
   "scripts": {
-    "clean": "rimraf ./dist ./coverage",
-    "build": "rimraf ./dist ./coverage && tsc -p tsconfig.prod.json",
+    "clean": "rimraf ./dist ./.coverage",
+    "build": "rimraf ./dist ./.coverage && tsc -p tsconfig.prod.json && tsc-alias",
+    "build-dev": "rimraf ./dist ./.coverage && tsc -p tsconfig.json && tsc-alias",
     "lint": "eslint src/**/*.ts test/**/*.ts --fix",
     "lint-check": "eslint src/**/*.ts test/**/*.ts",
     "prepare": "npm run build",
@@ -74,6 +71,7 @@
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.30.6",
     "@typescript-eslint/parser": "^5.30.6",
+    "@zerollup/ts-transform-paths": "^1.7.18",
     "dotenv": "^16.0.1",
     "eslint": "^8.20.0",
     "eslint-import-resolver-typescript": "^3.2.7",
@@ -88,6 +86,7 @@
     "supertest": "^6.2.4",
     "ts-jest": "^28.0.7",
     "ts-node": "^10.9.1",
+    "tsc-alias": "^1.7.0",
     "typescript": "^4.7.4",
     "with-local-tmp-dir": "^4.0.11"
   }

@@ -1,27 +1,41 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
+    "target": "esnext",
     "module": "commonjs",
     "lib": [
-      "ES2015",
-      "ES2016",
-      "ES2017",
-      "ES2018"
+      "esnext"
     ],
+    "moduleResolution": "node",
     "typeRoots": ["types", "src/types", "node_modules/@types"],
     "sourceMap": true,
+    "inlineSources": true,
     "outDir": "dist",
     // "rootDir": ".",
     "allowJs": true,
     "strict": true,
     "esModuleInterop": true,
+    "importHelpers": true,
     "forceConsistentCasingInFileNames": true,
     "removeComments": true,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "baseUrl": "./",
+    "paths": {
+      "@": ["src"],
+      "@/*": ["src/*"]
+    }
+    // "plugins": [
+    //   {
+    //     "transform": "@zerollup/ts-transform-paths"
+    //   }
+    // ]
   },
   "include": [
     "src",
     "test"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
   ]
 }

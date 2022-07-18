@@ -16,10 +16,10 @@ import {
 //   TargetVerticalTiltAngle
 // } from 'hap-nodejs/dist/lib/definitions/CharacteristicDefinitions'
 // import { IMELCloudAccessoryConfig, validateMELCloudAccessoryConfig } from '../config'
-import { IMELCloudPlatform } from '../platform'
+import { IMELCloudPlatform } from '@/platform'
 import {
   IDevice, IDeviceDetails, 
-} from '../api/client'
+} from '@/api/client'
 
 export interface IMELCloudBridgedAccessory extends Partial<PlatformAccessory> {
   readonly service: Service
