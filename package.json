@@ -1,18 +1,19 @@
 {
   "displayName": "Homebridge MELCloud",
   "name": "homebridge-melcloud-ts",
-  "version": "0.5.0-rc6",
+  "version": "0.5.0-rc7",
   "description": "Homebridge plugin for MELCloud.",
   "main": "dist/index.js",
   "type": "module",
   "files": [
     "dist/*.js",
     "dist/**/*.js",
+    "dist/**/*.d.ts",
     "config.schema.json"
   ],
   "scripts": {
     "clean": "rimraf ./dist ./coverage",
-    "build": "rimraf ./dist ./coverage && tsc",
+    "build": "rimraf ./dist ./coverage && tsc -p tsconfig.prod.json",
     "lint": "eslint src/**/*.ts test/**/*.ts --fix",
     "lint-check": "eslint src/**/*.ts test/**/*.ts",
     "prepare": "npm run build",
