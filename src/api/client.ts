@@ -118,6 +118,14 @@ export interface IDevice {
   } | null
 }
 
+export enum DeviceOperationMode {
+  HEAT = 1,
+  DEHUMIDIFY = 2,
+  COOL = 3,
+  VENTILATION = 7,
+  AUTO = 8,
+}
+
 export interface IDeviceDetails {
   // FIXME: Implement all the missing things!
   EffectiveFlags: number | null
@@ -125,7 +133,7 @@ export interface IDeviceDetails {
   RoomTemperature: number | null
   SetTemperature: number | null
   SetFanSpeed: number | null
-  OperationMode: number | null
+  OperationMode: DeviceOperationMode | null
   VaneHorizontal: number | null
   VaneVertical: number | null
   Name: string | null

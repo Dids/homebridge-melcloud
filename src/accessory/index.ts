@@ -1,9 +1,11 @@
 import {
   API,
+  Categories,
   CharacteristicValue,
   Logger,
   PlatformAccessory,
   Service,
+  UnknownContext,
 } from 'homebridge'
 // import {
 //   CurrentHeatingCoolingState,
@@ -18,8 +20,10 @@ import {
 // import { IMELCloudAccessoryConfig, validateMELCloudAccessoryConfig } from '../config'
 import { IMELCloudPlatform } from '@/platform'
 import {
+  DeviceOperationMode,
   IDevice, IDeviceDetails, 
 } from '@/api/client'
+import { Accessory } from 'hap-nodejs'
 
 export interface IMELCloudBridgedAccessory extends Partial<PlatformAccessory> {
   readonly service: Service
@@ -36,6 +40,8 @@ export interface IMELCloudBridgedAccessory extends Partial<PlatformAccessory> {
   targetHeaterCoolerState: number
   currentHeatingCoolingState: number
   targetHeatingCoolingState: number
+  currentHumidifierDehumidifierState : number
+  targetHumidifierDehumidifierState : number
   currentTemperature: number
   targetTemperature: number
   temperatureDisplayUnits: number
@@ -61,6 +67,10 @@ export interface IMELCloudBridgedAccessory extends Partial<PlatformAccessory> {
   handleCurrentHeatingCoolingStateGet(): Promise<number>
   handleTargetHeatingCoolingStateGet(): Promise<number>
   handleTargetHeatingCoolingStateSet(value: CharacteristicValue): Promise<void>
+
+  handleCurrentHumidifierDehumidifierStateGet(): Promise<number>
+  handleTargetHumidifierDehumidifierStateGet(): Promise<number>
+  handleTargetHumidifierDehumidifierStateSet(value: CharacteristicValue): Promise<void>
 
   handleCurrentTemperatureGet(): Promise<number>
   handleTargetTemperatureGet(): Promise<number>
@@ -143,6 +153,8 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
   public targetHeaterCoolerState: number
   public currentHeatingCoolingState: number
   public targetHeatingCoolingState: number
+  public currentHumidifierDehumidifierState: number
+  public targetHumidifierDehumidifierState: number
   public currentTemperature: number
   public targetTemperature: number
   public temperatureDisplayUnits: number
@@ -198,6 +210,8 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     this.targetHeaterCoolerState = this.api.hap.Characteristic.TargetHeaterCoolerState.AUTO
     this.currentHeatingCoolingState = this.api.hap.Characteristic.CurrentHeatingCoolingState.OFF
     this.targetHeatingCoolingState = this.api.hap.Characteristic.TargetHeatingCoolingState.OFF
+    this.currentHumidifierDehumidifierState = this.api.hap.Characteristic.CurrentHumidifierDehumidifierState.INACTIVE
+    this.targetHumidifierDehumidifierState = this.api.hap.Characteristic.TargetHumidifierDehumidifierState.HUMIDIFIER_OR_DEHUMIDIFIER
     this.currentTemperature = -270
     this.targetTemperature = 10
     this.temperatureDisplayUnits = this.api.hap.Characteristic.TemperatureDisplayUnits.CELSIUS
@@ -293,6 +307,15 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
       this.service.getCharacteristic(this.platform.Characteristic.TargetHeaterCoolerState)
         .onGet(this.handleTargetHeaterCoolerStateGet.bind(this))
         .onSet(this.handleTargetHeaterCoolerStateSet.bind(this))
+
+      // Register handlers for current humidifier/dehumidifier state
+      this.service.getCharacteristic(this.platform.Characteristic.CurrentHumidifierDehumidifierState)
+        .onGet(this.handleCurrentHumidifierDehumidifierStateGet.bind(this))
+
+      // Register handlers for target humidifier/dehumidifier state
+      this.service.getCharacteristic(this.platform.Characteristic.TargetHumidifierDehumidifierState)
+        .onGet(this.handleTargetHumidifierDehumidifierStateGet.bind(this))
+        .onSet(this.handleTargetHumidifierDehumidifierStateSet.bind(this))
 
       // Register handlers for cooling threshold temperature
       this.service.getCharacteristic(this.platform.Characteristic.CoolingThresholdTemperature)
@@ -466,6 +489,57 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     this.targetHeatingCoolingState = currentValue
 
     await this.sendDeviceData(this.api.hap.Characteristic.TargetHeatingCoolingState.UUID, this.targetHeatingCoolingState)
+  }
+
+  /**
+   * Handle requests to get the current value of the "Current Humidifier Dehumidifier State" characteristic
+   */
+  async handleCurrentHumidifierDehumidifierStateGet(): Promise<number> {
+    if (this.platform.config.debug) { this.log.info('Triggered GET CurrentHumidifierDehumidifierState') }
+
+    // FIXME: This shouldn't be done with every GET request! Or wait, should it?
+    // Update device info
+    await this.updateDeviceInfo()
+
+    const minCurrentHumidifierDehumidifierState = 0
+    const maxCurrentHumidifierDehumidifierState = 3
+    const currentValue = Math.min(maxCurrentHumidifierDehumidifierState, Math.max(minCurrentHumidifierDehumidifierState, this.currentHumidifierDehumidifierState))
+
+    if (this.platform.config.debug) { this.log.info('Returning CurrentHumidifierDehumidifierState with value:', currentValue) }
+    return currentValue
+  }
+
+  /**
+   * Handle requests to get the current value of the "Target Humidifier Dehumidifier State" characteristic
+   */
+  async handleTargetHumidifierDehumidifierStateGet(): Promise<number> {
+    if (this.platform.config.debug) { this.log.info('Triggered GET TargetHumidifierDehumidifierState') }
+
+    // FIXME: This shouldn't be done with every GET request! Or wait, should it?
+    // Update device info
+    await this.updateDeviceInfo()
+
+    const minTargetHumidifierDehumidifierState = 0
+    const maxTargetHumidifierDehumidifierState = 2
+    const currentValue = Math.min(maxTargetHumidifierDehumidifierState, Math.max(minTargetHumidifierDehumidifierState, this.targetHumidifierDehumidifierState))
+
+    if (this.platform.config.debug) { this.log.info('Returning TargetHumidifierDehumidifierState with value:', currentValue) }
+    return currentValue
+  }
+
+  /**
+   * Handle requests to set the "Target Humidifier Dehumidifier State" characteristic
+   */
+  async handleTargetHumidifierDehumidifierStateSet(value: CharacteristicValue): Promise<void> {
+    if (this.platform.config.debug) { this.log.info('Triggered SET TargetHumidifierDehumidifierState:', value) }
+
+    const minTargetHumidifierDehumidifierState = 0
+    const maxTargetHumidifierDehumidifierState = 2
+    const currentValue = Math.min(maxTargetHumidifierDehumidifierState, Math.max(minTargetHumidifierDehumidifierState, value as number))
+
+    this.targetHumidifierDehumidifierState = currentValue
+
+    await this.sendDeviceData(this.api.hap.Characteristic.TargetHumidifierDehumidifierState.UUID, this.targetHumidifierDehumidifierState)
   }
 
   /**
@@ -871,87 +945,130 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const CurrentHeatingCoolingState = this.api.hap.Characteristic.CurrentHeatingCoolingState
     const TargetHeatingCoolingState = this.api.hap.Characteristic.TargetHeatingCoolingState
 
+    const CurrentHumidifierDehumidifierState = this.api.hap.Characteristic.CurrentHumidifierDehumidifierState
+    const TargetHumidifierDehumidifierState = this.api.hap.Characteristic.TargetHumidifierDehumidifierState
+
     const TemperatureDisplayUnits = this.api.hap.Characteristic.TemperatureDisplayUnits
 
     // const LockPhysicalControls = this.api.hap.Characteristic.LockPhysicalControls
     // const RotationSpeed = this.api.hap.Characteristic.RotationSpeed
     const SwingMode = this.api.hap.Characteristic.SwingMode
 
-    // FIXME: This might be where our issue is with the device showing up as "ON" when it's actually off!?
-    // Update active
-    this.active = deviceInfo.Power != null && deviceInfo.Power ? Active.ACTIVE : Active.INACTIVE
+    // Handle the device active state based on its power and offline status
+    const deviceHasPower = deviceInfo.Power ?? false
+    const deviceIsOffline = deviceInfo.Offline ?? true
+    this.active = (deviceHasPower === true && deviceIsOffline === false) ? Active.ACTIVE : Active.INACTIVE
     if (this.platform.config.debug) {
       this.log.info('Updated Active with value:', this.active, 'from device info:', deviceInfo)
     }
 
-    // Update current heater/heating cooler/cooling state
-    if (deviceInfo.Power != null) {
-      if (!deviceInfo.Power) {
-        this.currentHeatingCoolingState = CurrentHeatingCoolingState.OFF
-        if (this.platform.config.debug) { this.log.info('Device Power is OFF, setting CurrentHeatingCoolingState to OFF') }
-      } else {
-        if (this.platform.config.debug) {this.log.info('Device Power is ON') }
-        switch (deviceInfo.OperationMode) {
-          case 1:
-            this.currentHeaterCoolerState = CurrentHeaterCoolerState.HEATING
-            this.currentHeatingCoolingState = CurrentHeatingCoolingState.HEAT
-            if (this.platform.config.debug) {
-              this.log.info('currentHeaterCoolerState/currentHeatingCoolingState changed:', this.currentHeaterCoolerState, this.currentHeatingCoolingState)
-            }
-            break
-          case 3:
-            this.currentHeaterCoolerState = CurrentHeaterCoolerState.COOLING
-            this.currentHeatingCoolingState = CurrentHeatingCoolingState.COOL
-            if (this.platform.config.debug) {
-              this.log.info('currentHeaterCoolerState/CurrentHeatingCoolingState changed:', this.currentHeaterCoolerState, this.currentHeatingCoolingState)
-            }
-            break
+    // Update heater/heating cooler/cooling state
+    if (this.active === Active.ACTIVE) {
+      if (this.platform.config.debug) {this.log.info('Device is ACTIVE, detecting operation mode') }
 
-          default:
-            // MELCloud can return also 2 (dehumidify), 7 (Ventilation) and 8 (auto)
-            // We return 5 which is undefined in HomeKit
-            // FIXME: This no longer applies as we're clamping the values in getters/setters!
-            this.currentHeaterCoolerState = 5
-            this.currentHeatingCoolingState = 5
-            if (this.platform.config.debug) { this.log.info('Unknown OperationMode:', deviceInfo.OperationMode) }
-            break
-        }
+      // Always disable dehumidifying when the operation mode is not set to dehumidifying
+      if (deviceInfo.OperationMode !== DeviceOperationMode.DEHUMIDIFY) {
+        this.currentHumidifierDehumidifierState = CurrentHumidifierDehumidifierState.INACTIVE
+        this.targetHumidifierDehumidifierState = TargetHumidifierDehumidifierState.HUMIDIFIER_OR_DEHUMIDIFIER
       }
-    } else {
-      if (this.platform.config.debug) {
-        this.log.info('DeviceInfo.Power is null, assuming OFF')
-      }
-    }
 
-    // Update target heater/heating cooler/cooling state
-    if (deviceInfo.Power != null) {
-      if (!deviceInfo.Power) {
-        this.currentHeaterCoolerState = CurrentHeaterCoolerState.INACTIVE
-        this.currentHeatingCoolingState = TargetHeatingCoolingState.OFF
-      } else {
-        switch (deviceInfo.OperationMode) {
-          case 1:
-            this.targetHeaterCoolerState = TargetHeaterCoolerState.HEAT
-            this.targetHeatingCoolingState = TargetHeatingCoolingState.HEAT
-            break
-          case 3:
-            this.targetHeaterCoolerState = TargetHeaterCoolerState.COOL
-            this.targetHeatingCoolingState = TargetHeatingCoolingState.COOL
-            break
-          case 8:
-            this.targetHeaterCoolerState = TargetHeaterCoolerState.AUTO
-            this.targetHeatingCoolingState = TargetHeatingCoolingState.AUTO
-            break
+      switch (deviceInfo.OperationMode) {
+        case DeviceOperationMode.HEAT: // Heating
+          if (this.platform.config.debug) {
+            this.log.info('Device operation mode changed to HEATING')
+          }
 
-          default:
-            // MELCloud can return also 2 (dehumidify), 7 (Ventilation) and 8 (auto)
-            // We return 5 which is undefined in HomeKit
-            // FIXME: This no longer applies as we're clamping the values in getters/setters!
-            this.targetHeaterCoolerState = 5
-            this.targetHeatingCoolingState = 5
-            break
-        }
+          this.currentHeaterCoolerState = CurrentHeaterCoolerState.HEATING
+          this.currentHeatingCoolingState = CurrentHeatingCoolingState.HEAT
+
+          this.targetHeaterCoolerState = TargetHeaterCoolerState.HEAT
+          this.targetHeatingCoolingState = TargetHeatingCoolingState.HEAT
+
+          break
+
+        case DeviceOperationMode.DEHUMIDIFY: // Dehumidifying
+          if (this.platform.config.debug) {
+            this.log.info('Device operation mode changed to DEHUMIDIFYING')
+          }
+
+          // TODO: While HomeKit doesn't support this yet, we can still use a characteristic for it,
+          //       similar to how we're doing with the horizontal and vertical vanes
+          this.currentHumidifierDehumidifierState = CurrentHumidifierDehumidifierState.DEHUMIDIFYING
+          this.targetHumidifierDehumidifierState = TargetHumidifierDehumidifierState.DEHUMIDIFIER
+
+          // HomeKit does not support dehumidifying (at the time of writing this),
+          // so we will simply set the state to 5, which is "undefined" in HomeKit
+          this.currentHeaterCoolerState = 5
+          this.currentHeatingCoolingState = 5
+          this.targetHeaterCoolerState = 5
+          this.targetHeatingCoolingState = 5
+
+          break
+
+        case DeviceOperationMode.COOL: // Cooling
+          if (this.platform.config.debug) {
+            this.log.info('Device operation mode changed to COOLING')
+          }
+
+          this.currentHeaterCoolerState = CurrentHeaterCoolerState.COOLING
+          this.currentHeatingCoolingState = CurrentHeatingCoolingState.COOL
+
+          this.targetHeaterCoolerState = TargetHeaterCoolerState.COOL
+          this.targetHeatingCoolingState = TargetHeatingCoolingState.COOL
+
+          break
+
+        case DeviceOperationMode.VENTILATION: // Ventilation
+          if (this.platform.config.debug) {
+            this.log.info('Device operation mode changed to VENTILATION')
+          }
+
+          // TODO: Implement this with a characteristic, somehow?
+
+          // HomeKit does not support ventilation (at the time of writing this),
+          // so we will simply set the state to 5, which is "undefined" in HomeKit
+          this.currentHeaterCoolerState = 5
+          this.currentHeatingCoolingState = 5
+          this.targetHeaterCoolerState = 5
+          this.targetHeatingCoolingState = 5
+
+          break
+
+        case DeviceOperationMode.AUTO: // Automatic
+          if (this.platform.config.debug) {
+            this.log.info('Device operation mode changed to AUTO')
+          }
+
+          // TODO: What about the current state when on auto? Guess we can't do much about that?
+
+          this.targetHeaterCoolerState = TargetHeaterCoolerState.AUTO
+          this.targetHeatingCoolingState = TargetHeatingCoolingState.AUTO
+
+          break
+
+        default: // Unknown
+          if (this.platform.config.debug) {
+            this.log.info('Device operation mode changed to DEFAULT / UNKNOWN')
+          }
+          
+          // TODO: If we ever get here, we should see if we can implement these operation modes!
+          this.currentHeaterCoolerState = 5
+          this.currentHeatingCoolingState = 5
+          this.targetHeaterCoolerState = 5
+          this.targetHeatingCoolingState = 5
+
+          // if (this.platform.config.debug) { this.log.info('Unknown Device OperationMode:', deviceInfo.OperationMode) }
+          this.log.warn('Unknown or unsupported device operation mode detected:', deviceInfo.OperationMode)
+
+          break
       }
+    } else { // Device is powered off or offline, set both current and target states to OFF/INACTIVE
+      if (this.platform.config.debug) { this.log.info('Device is INACTIVE, marking Device as OFF') }
+
+      this.currentHeatingCoolingState = CurrentHeatingCoolingState.OFF
+      this.currentHeaterCoolerState = CurrentHeaterCoolerState.INACTIVE
+
+      this.targetHeatingCoolingState = TargetHeatingCoolingState.OFF
     }
 
     // Update current temperature
