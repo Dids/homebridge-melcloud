@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge MELCloud",
   "name": "homebridge-melcloud-ts",
-  "version": "0.5.0-rc11",
+  "version": "0.5.0-rc12",
   "description": "Homebridge plugin for MELCloud.",
   "main": "dist/index.js",
   "files": [
@@ -55,7 +55,7 @@
     "async-mutex": "^0.3.2",
     "lodash": "^4.17.21",
     "node-cache": "^5.1.2",
-    "node-fetch": "^3.2.8",
+    "node-fetch": "2.6.7",
     "node-persist": "^3.1.0",
     "object-hash": "^3.0.0"
   },
