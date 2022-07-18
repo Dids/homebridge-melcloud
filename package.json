@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge MELCloud",
   "name": "homebridge-melcloud-ts",
-  "version": "0.5.0-rc12",
+  "version": "0.5.0-rc13",
   "description": "Homebridge plugin for MELCloud.",
   "main": "dist/index.js",
   "files": [
@@ -33,6 +33,13 @@
   "keywords": [
     "homebridge-plugin",
     "Mitsubishi",
+    "Electric",
+    "AC",
+    "Air Conditioner",
+    "Heating",
+    "Cooling",
+    "Thermostat",
+    "Air Conditioner",
     "Melcloud",
     "homekit",
     "Siri",
