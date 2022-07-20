@@ -952,9 +952,14 @@ export default class MELCloudBridgedAccessory implements IMELCloudBridgedAccesso
     const SwingMode = this.api.hap.Characteristic.SwingMode
 
     // Handle the device active state based on its power and offline status
+    // NOTE: Sometimes the API returns "Offline: true" BUT "Power: true",
+    //       in which case the device SHOULD actually be considered active.
     const deviceHasPower = deviceInfo.Power ?? false
-    const deviceIsOffline = deviceInfo.Offline ?? true
-    this.active = (deviceHasPower === true && deviceIsOffline === false) ? Active.ACTIVE : Active.INACTIVE
+    // const deviceIsOffline = deviceInfo.Offline ?? true // TODO: Do we really not need to detect offline state at all?
+    // FIXME: When "Offline: True, Power: True" is returned, the device is actually powered on and should be considered active,
+    //        but what happens when we turn it off? What does the API return? Is "InStandbyMode: True" set in this case?
+    // this.active = (deviceHasPower === true && deviceIsOffline === false) ? Active.ACTIVE : Active.INACTIVE
+    this.active = (deviceHasPower === true ? Active.ACTIVE : Active.INACTIVE)
     if (this.platform.config.debug) {
       this.log.info('Updated Active with value:', this.active, 'from device info:', deviceInfo)
     }
