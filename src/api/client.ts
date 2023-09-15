@@ -167,8 +167,8 @@ export interface IMELCloudAPIClient {
   config: IMELCloudConfig
   // StoragePath: string | null
   storage: NodePersist.LocalStorage
-  cache: NodeCache
-  mutex: Mutex
+  cache: NodeCache | null
+  mutex: Mutex | null
   ContextKey: string | null
   ContextKeyExpirationDate: Date | null
   UseFahrenheit: boolean | null
@@ -187,8 +187,8 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
   config: IMELCloudConfig
   // StoragePath: string | null
   storage: NodePersist.LocalStorage
-  cache: NodeCache
-  mutex: Mutex
+  cache: NodeCache | null = null
+  mutex: Mutex | null = null
   ContextKey: string | null
   ContextKeyExpirationDate: Date | null
   UseFahrenheit: boolean | null
@@ -259,15 +259,19 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
       })
 
     // Initialize in-memory cache
-    this.cache = new NodeCache({
-      useClones: true, // False disables cloning of variables and uses direct references instead (faster than copying)
-      deleteOnExpire: true, // Delete after expiration
-      checkperiod: 60, // Check and delete expired items in seconds
-      stdTTL: 0, // Default cache time in seconds (0 = unlimited)
-    })
+    if (this.config.cacheGetRequests || this.config.cachePostRequests) {
+      this.cache = new NodeCache({
+        useClones: true, // False disables cloning of variables and uses direct references instead (faster than copying)
+        deleteOnExpire: true, // Delete after expiration
+        checkperiod: this.requestCacheTime, // 60, // Check and delete expired items in seconds
+        stdTTL: this.requestCacheTime, // 0, // Default cache time in seconds (0 = unlimited)
+      })
+    }
 
     // Initialize mutex
-    this.mutex = new Mutex()
+    if (this.config.enableMutexLock) {
+      this.mutex = new Mutex()
+    }
   }
 
   async get(url: string, formData?: { [key: string]: unknown }, headers?: { [key: string]: unknown }, skipCache?: boolean): Promise<any> {
@@ -282,24 +286,24 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
     }
 
     // Generate a hash from the request
-    const requestHash = objectHash({
+    const requestHash = this.config.cacheGetRequests ? objectHash({
       url,
       formData,
       headers,
-    })
-    if (this.config.debug) { this.log.info('Generated GET request hash:', requestHash) }
+    }) : null
+    if (this.config.debug && this.config.cacheGetRequests) { this.log.info('Generated GET request hash:', requestHash) }
 
-    // Lock the call until caching is complete and before checking the cache
-    return this.mutex.runExclusive(async() => {
-      // Return the cached response (if any)
+    // Return the cached response (if any)
+    if (!skipCache && this.cache && this.config.cacheGetRequests && requestHash) {
       const cachedResponseJSON = this.cache.get(requestHash)
-      if (cachedResponseJSON && !skipCache) {
+      if (cachedResponseJSON) {
         if (this.config.debug) { this.log.info('Returning cached response:', cachedResponseJSON) }
         return cachedResponseJSON
-      } else if (skipCache) {
-        if (this.config.debug) { this.log.info('Cache skip enabled, skipping response caching') }
       }
+    }
 
+    // Prepare the API call
+    const apiCall = async() => {
       // Run the request and get the response
       const response = await fetch(url, {
         method: 'GET',
@@ -311,13 +315,18 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
       const responseJSON = await response.json()
 
       // Cache the request response
-      if (!skipCache) {
+      if (!skipCache && this.cache && this.config.cacheGetRequests && requestHash) {
         this.cache.set(requestHash, responseJSON, this.requestCacheTime)
         if (this.config.debug) { this.log.info('Caching response for', this.requestCacheTime, 'seconds:', responseJSON) }
       }
 
       return responseJSON
-    })
+    }
+
+    // Lock the call until caching is complete and before checking the cache
+    const result = this.config.enableMutexLock && this.mutex ? await this.mutex.runExclusive(apiCall) : await apiCall()
+
+    return result
   }
 
   async post(url: string, formData?: { [key: string]: unknown }, headers?: { [key: string]: unknown }, body?: unknown, skipCache?: boolean): Promise<any> {
@@ -335,25 +344,25 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
     }
 
     // Generate a hash from the request
-    const requestHash = objectHash({
+    const requestHash = this.config.cachePostRequests ? objectHash({
       url,
       formData,
       headers,
       body,
-    })
-    if (this.config.debug) { this.log.info('Generated POST request hash:', requestHash) }
+    }) : null
+    if (this.config.debug && this.config.cachePostRequests) { this.log.info('Generated POST request hash:', requestHash) }
 
-    // Lock the call until caching is complete and before checking the cache
-    return this.mutex.runExclusive(async() => {
-      // Return the cached response (if any)
+    // Return the cached response (if any)
+    if (!skipCache && this.cache && this.config.cachePostRequests && requestHash) {
       const cachedResponseJSON = this.cache.get(requestHash)
       if (cachedResponseJSON && !skipCache) {
         if (this.config.debug) { this.log.info('Returning cached response:', cachedResponseJSON) }
         return cachedResponseJSON
-      } else if (skipCache) {
-        if (this.config.debug) { this.log.info('Cache skip enabled, skipping response caching') }
       }
+    }
 
+    // Prepare the API call
+    const apiCall = async() => {
       // Run the request and get the response
       const response = await fetch(url, {
         method: 'POST',
@@ -365,13 +374,18 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
       const responseJSON = await response.json()
 
       // Cache the request response
-      if (!skipCache) {
+      if (!skipCache && this.cache && this.config.cachePostRequests && requestHash) {
         this.cache.set(requestHash, responseJSON, this.requestCacheTime)
         if (this.config.debug) { this.log.info('Caching response for', this.requestCacheTime, 'seconds:', responseJSON) }
       }
 
       return responseJSON
-    })
+    }
+
+    // Lock the call until caching is complete
+    const result = this.config.enableMutexLock && this.mutex ? await this.mutex.runExclusive(apiCall) : await apiCall()
+
+    return result
   }
 
   async login(): Promise<ILoginData | null> {

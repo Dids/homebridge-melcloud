@@ -1,5 +1,0 @@
-{
-  "upgrade": true,
-  "filter": "",
-  "reject": ["node-fetch"]
-}

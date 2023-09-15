@@ -46,6 +46,10 @@ export interface IMELCloudConfig extends PlatformConfig {
   username: string
   password: string
   debug: boolean
+  cacheTime: number
+  cacheGetRequests: boolean
+  cachePostRequests: boolean
+  enableMutexLock: boolean
 }
 
 export function validateMELCloudConfig(config: IMELCloudConfig): void {
@@ -60,6 +64,18 @@ export function validateMELCloudConfig(config: IMELCloudConfig): void {
   }
   if (!config.debug) {
     config.debug = false
+  }
+  if (!config.cacheTime) {
+    config.cacheTime = 10
+  }
+  if (!config.cacheGetRequests) {
+    config.cacheGetRequests = false
+  }
+  if (!config.cachePostRequests) {
+    config.cachePostRequests = false
+  }
+  if (!config.useMutexLock) {
+    config.useMutexLock = false
   }
 }
 

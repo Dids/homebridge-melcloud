@@ -1,0 +1,35 @@
+{
+    "bridge": {
+        "name": "Homebridge (MELCloud)",
+        "username": "CC:22:3D:E3:CE:30",
+        "manufacturer": "homebridge.io",
+        "model": "homebridge",
+        "port": 51826,
+        "pin": "031-45-154",
+        "advertiser": "ciao"
+    },
+    "accessories": [],
+    "platforms": [
+        {
+            "name": "Config",
+            "port": 8581,
+            "auth": "none",
+            "theme": "auto",
+            "tempUnits": "c",
+            "lang": "en",
+            "platform": "config"
+        },
+        {
+            "platform": "MELCloud",
+            "name": "MELCloud",
+            "language": "0",
+            "username": "PUT USERNAME OF YOUR MELCLOUD ACCOUNT HERE",
+            "password": "PUT PASSWORD OF YOUR MELCLOUD ACCOUNT HERE",
+            "debug": false,
+            "cacheTime": 10,
+            "cacheGetRequests": false,
+            "cachePostRequests": false,
+            "enableMutexLock": false
+          }
+    ]
+}

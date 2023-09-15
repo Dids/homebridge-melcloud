@@ -46,6 +46,9 @@
     // "json"
   ],
 
+  "editor.rulers": [ 140 ],
+  "eslint.enable": true,
+
   // Disable Standard
   "standard.enable": false,
   "standard.validate": [

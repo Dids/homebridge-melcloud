@@ -70,6 +70,30 @@
         "type": "boolean",
         "default": false,
         "description": "Enable debug logging."
+      },
+      "cacheTime": {
+        "title": "Cache Time",
+        "type": "integer",
+        "default": 10,
+        "description": "The time in seconds to cache data from MELCloud."
+      },
+      "cacheGetRequests": {
+        "title": "Cache GET Requests",
+        "type": "boolean",
+        "default": false,
+        "description": "Enable to cache GET requests from MELCloud for a period of time."
+      },
+      "cachePostRequests": {
+        "title": "Cache POST Requests",
+        "type": "boolean",
+        "default": false,
+        "description": "Enable to cache POST requests to MELCloud for a period of time."
+      },
+      "enableMutexLock": {
+        "title": "Enable Mutex Lock",
+        "type": "boolean",
+        "default": false,
+        "description": "Enable to allow only one MELCloud request to run at a time."
       }
     }
   },
