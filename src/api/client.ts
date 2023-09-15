@@ -6,7 +6,8 @@ import {
 } from '@/config'
 
 // import request from 'request-promise-native'
-import fetch from 'node-fetch'
+// import fetch from 'node-fetch'
+import fetch from 'node-fetch-native'
 // import url from 'url'
 
 import NodePersist from 'node-persist'
