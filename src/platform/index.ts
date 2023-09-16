@@ -154,13 +154,19 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
     this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
       if (this.config.debug) { this.log.info('Executed didFinishLaunching callback') }
 
-      // run the method to discover / register your devices as accessories
-      this.discoverDevices()
+      this.client.init()
         .then(() => {
-          if (this.config.debug) { this.log.info('Device discovery successful') }
+          // run the method to discover / register your devices as accessories
+          this.discoverDevices()
+            .then(() => {
+              if (this.config.debug) { this.log.info('Device discovery successful') }
+            })
+            .catch((err: Error) => {
+              this.log.error('Device discovery failed:', err)
+            })
         })
         .catch((err: Error) => {
-          this.log.error('Device discovery failed:', err)
+          this.log.error('Failed to initialize MELCloud API client:', err)
         })
     })
   }

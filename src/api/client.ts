@@ -174,6 +174,7 @@ export interface IMELCloudAPIClient {
   ContextKeyExpirationDate: Date | null
   UseFahrenheit: boolean | null
   isContextKeyValid: boolean
+  init(): Promise<void>
   get (url: string, formData?: { [key: string]: unknown }, headers?: { [key: string]: unknown }): Promise<any>
   post (url: string, formData?: { [key: string]: unknown }, headers?: { [key: string]: unknown }): Promise<any>
   login (): Promise<ILoginData | null>
@@ -273,6 +274,16 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
     if (this.config.enableMutexLock) {
       this.mutex = new Mutex()
     }
+  }
+
+  async init() {
+    if (this.config.debug) { this.log.info('Asynchronous initialization started') }
+
+    // Initialize storage
+    if (this.config.debug) { this.log.info('Initializing local storage') }
+    await this.storage.init()
+
+    if (this.config.debug) { this.log.info('Asynchronous initialization finished') }
   }
 
   async get(url: string, formData?: { [key: string]: unknown }, headers?: { [key: string]: unknown }, skipCache?: boolean): Promise<any> {
