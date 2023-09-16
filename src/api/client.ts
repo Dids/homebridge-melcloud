@@ -10,7 +10,8 @@ import {
 import fetch from 'node-fetch-native'
 // import url from 'url'
 
-import NodePersist, { InitOptions } from 'node-persist'
+// import NodePersist, { InitOptions } from 'node-persist'
+import { LocalStorage } from 'node-localstorage'
 import NodeCache from 'node-cache'
 import objectHash from 'object-hash'
 import { Mutex } from 'async-mutex'
@@ -167,7 +168,8 @@ export interface IDeviceDetails {
 export interface IMELCloudAPIClient {
   log: Logger
   config: IMELCloudConfig
-  storage: NodePersist.LocalStorage
+  //   storage: NodePersist.LocalStorage
+  storage: LocalStorage
   cache: NodeCache | null
   mutex: Mutex | null
   ContextKey: string | null
@@ -188,7 +190,8 @@ export interface IMELCloudAPIClient {
 export class MELCloudAPIClient implements IMELCloudAPIClient {
   log: Logger
   config: IMELCloudConfig
-  storage: NodePersist.LocalStorage = NodePersist
+  //   storage: NodePersist.LocalStorage = NodePersist
+  storage: LocalStorage = new LocalStorage('./.node-persist/storage/melcloud')
   cache: NodeCache | null = null
   mutex: Mutex | null = null
   ContextKey: string | null = null
@@ -260,27 +263,32 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
     if (this.config.debug) { this.log.info('Asynchronous initialization started') }
 
     // Initialize storage
-    if (this.config.debug) { this.log.info('Initializing storage with path:', this.storagePath) }
-    // this.storage = NodePersist.create({
+    this.log.info('Initializing persistent storage with path:', this.storagePath)
+    if (this.storagePath) {
+      this.storage = new LocalStorage(this.storagePath)
+    }
+    // // this.storage = NodePersist.create({
+    // //   dir: this.storagePath ?? './.node-persist/storage',
+    // // })
+    // // this.storage = NodePersist
+    // await this.storage.init({
     //   dir: this.storagePath ?? './.node-persist/storage',
-    // })
-    // this.storage = NodePersist
-    await this.storage.init({
-      dir: this.storagePath ?? './.node-persist/storage',
-      ttl: false, // Never expire (otherwise set to milliseconds)
-      writeQueue: true, // Enable the new write queue system
-      logging: this.config.debug, // Enable logging when debugging
-    } as unknown as InitOptions)
-    if (this.config.debug) { this.log.info('Available storage values:', this.storage.values()) }
+    //   ttl: false, // Never expire (otherwise set to milliseconds)
+    //   writeQueue: true, // Enable the new write queue system
+    //   logging: this.config.debug, // Enable logging when debugging
+    // } as unknown as InitOptions)
+    // if (this.config.debug) { this.log.info('Available storage values:', this.storage.values()) }
 
     // Load settings from storage
-    this.ContextKey = await this.storage.getItem('ContextKey')
+    this.ContextKey = this.storage.getItem('ContextKey')
     if (this.config.debug) { this.log.info('Loaded ContextKey from storage:', this.ContextKey) }
     
-    this.ContextKeyExpirationDate = await this.storage.getItem('ContextKeyExpirationDate')
+    const contextKeyExpirationDate = this.storage.getItem('ContextKeyExpirationDate')
+    this.ContextKeyExpirationDate = contextKeyExpirationDate ? new Date(contextKeyExpirationDate) : null
     if (this.config.debug) { this.log.info('Loaded ContextKeyExpirationDate from storage:', this.ContextKeyExpirationDate) }
     
-    this.UseFahrenheit = await this.storage.getItem('UseFahrenheit')
+    const useFahrenheit = this.storage.getItem('UseFahrenheit')
+    this.UseFahrenheit = useFahrenheit ? true : false
     if (this.config.debug) { this.log.info('Loaded UseFahrenheit from storage:', this.UseFahrenheit) }
     
     // Initialize in-memory cache
@@ -451,7 +459,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
     if (loginData) {
       // FIXME: This renews the ContextKey on every boot, which should NOT be necessary at all!
       this.ContextKey = loginData.ContextKey
-      await this.storage.updateItem('ContextKey', this.ContextKey)
+      this.storage.setItem('ContextKey', JSON.stringify(this.ContextKey))
 
       if (loginData.Expiry) {
         this.ContextKeyExpirationDate = new Date(loginData.Expiry)
@@ -459,12 +467,12 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
         this.ContextKeyExpirationDate.setMinutes(0)
         this.ContextKeyExpirationDate.setSeconds(0)
         this.ContextKeyExpirationDate.setMilliseconds(0)
-        await this.storage.updateItem('ContextKeyExpirationDate', this.ContextKeyExpirationDate)
+        this.storage.setItem('ContextKeyExpirationDate', JSON.stringify(this.ContextKeyExpirationDate))
       }
 
       // FIXME: This is NEVER updated until ContextKey expires, which takes 1 whole year to happen, unless the plugin or Homebridge is restarted..
       this.UseFahrenheit = loginData.UseFahrenheit
-      await this.storage.updateItem('UseFahrenheit', this.UseFahrenheit)
+      this.storage.setItem('UseFahrenheit', JSON.stringify(this.UseFahrenheit))
     } else {
       if (response.ErrorId === IErrorCode.InvalidCredentials) {
         throw new Error(`Login failed due to invalid credentials. Received response: ${JSON.stringify(response)}`)
