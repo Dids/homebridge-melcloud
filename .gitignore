@@ -1,6 +1,9 @@
 # Jest coverage
 .coverage/
 
+# node-localstorage
+tmp-*/
+
 # Created by https://www.gitignore.io/api/node,linux,macos,windows,visualstudiocode
 
 ### TypeScript ###
