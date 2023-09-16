@@ -10,10 +10,11 @@ import {
 import fetch from 'node-fetch-native'
 // import url from 'url'
 
-import NodePersist from 'node-persist'
+import NodePersist, { InitOptions } from 'node-persist'
 import NodeCache from 'node-cache'
 import objectHash from 'object-hash'
 import { Mutex } from 'async-mutex'
+import path from 'path'
 
 const MELCLOUD_API_ROOT = 'https://app.melcloud.com/Mitsubishi.Wifi.Client'
 const MELCLOUD_API_LOGIN = 'Login/ClientLogin'
@@ -166,7 +167,6 @@ export interface IDeviceDetails {
 export interface IMELCloudAPIClient {
   log: Logger
   config: IMELCloudConfig
-  // StoragePath: string | null
   storage: NodePersist.LocalStorage
   cache: NodeCache | null
   mutex: Mutex | null
@@ -174,6 +174,7 @@ export interface IMELCloudAPIClient {
   ContextKeyExpirationDate: Date | null
   UseFahrenheit: boolean | null
   isContextKeyValid: boolean
+  isReady: boolean
   init(): Promise<void>
   get (url: string, formData?: { [key: string]: unknown }, headers?: { [key: string]: unknown }): Promise<any>
   post (url: string, formData?: { [key: string]: unknown }, headers?: { [key: string]: unknown }): Promise<any>
@@ -187,13 +188,26 @@ export interface IMELCloudAPIClient {
 export class MELCloudAPIClient implements IMELCloudAPIClient {
   log: Logger
   config: IMELCloudConfig
-  // StoragePath: string | null
-  storage: NodePersist.LocalStorage
+  storage: NodePersist.LocalStorage = NodePersist
   cache: NodeCache | null = null
   mutex: Mutex | null = null
-  ContextKey: string | null
-  ContextKeyExpirationDate: Date | null
-  UseFahrenheit: boolean | null
+  ContextKey: string | null = null
+  ContextKeyExpirationDate: Date | null = null
+  UseFahrenheit: boolean | null = null
+
+  get isReady(): boolean {
+    // FIXME: This is obviously VERY BAD design, but it should work for this specific use case..
+    // Block until this.ready is true
+    while (!this.ready) {
+      // Let the event loop run
+
+    }
+    return this.ready
+  }
+  private ready: boolean = false
+
+  // Default storage path to '<current dir>/.node-persist/storage'
+  private storagePath: string = path.join(process.cwd(), '.node-persist/storage/melcloud')
 
   get isContextKeyValid(): boolean {
     if (!this.ContextKey || this.ContextKey.length < 1) {
@@ -231,37 +245,47 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
     }
     this.config = config
 
-    // MELCloud login token (or "context key")
-    // this.StoragePath = storagePath
-    this.ContextKey = null
-    this.ContextKeyExpirationDate = null
-    this.UseFahrenheit = null
+    if (!storagePath) {
+      throw new Error('Invalid or missing storage path')
+    }
+    this.storagePath = storagePath
+  }
+
+  async init() {
+    if (this.ready) {
+      if (this.config.debug) {this.log.info('Already initialized, skipping initialization') }
+      return
+    }
+
+    if (this.config.debug) { this.log.info('Asynchronous initialization started') }
 
     // Initialize storage
-    if (this.config.debug) { this.log.info('Initializing API client storage with path:', storagePath) }
-    this.storage = NodePersist.create({
-      dir: storagePath,
-    })
+    if (this.config.debug) { this.log.info('Initializing storage with path:', this.storagePath) }
+    // this.storage = NodePersist.create({
+    //   dir: this.storagePath ?? './.node-persist/storage',
+    // })
+    // this.storage = NodePersist
+    await this.storage.init({
+      dir: this.storagePath ?? './.node-persist/storage',
+      ttl: false, // Never expire (otherwise set to milliseconds)
+      writeQueue: true, // Enable the new write queue system
+      logging: this.config.debug, // Enable logging when debugging
+    } as unknown as InitOptions)
+    if (this.config.debug) { this.log.info('Available storage values:', this.storage.values()) }
 
     // Load settings from storage
-    this.storage.getItem('ContextKey')
-      .then(value => {
-        this.ContextKey = value
-        if (this.config.debug) { this.log.info('Loaded ContextKey from storage:', this.ContextKey) }
-      })
-    this.storage.getItem('ContextKeyExpirationDate')
-      .then(value => {
-        this.ContextKeyExpirationDate = value
-        if (this.config.debug) { this.log.info('Loaded ContextKeyExpirationDate from storage:', this.ContextKeyExpirationDate) }
-      })
-    this.storage.getItem('UseFahrenheit')
-      .then(value => {
-        this.UseFahrenheit = value
-        if (this.config.debug) { this.log.info('Loaded UseFahrenheit from storage:', this.UseFahrenheit) }
-      })
-
+    this.ContextKey = await this.storage.getItem('ContextKey')
+    if (this.config.debug) { this.log.info('Loaded ContextKey from storage:', this.ContextKey) }
+    
+    this.ContextKeyExpirationDate = await this.storage.getItem('ContextKeyExpirationDate')
+    if (this.config.debug) { this.log.info('Loaded ContextKeyExpirationDate from storage:', this.ContextKeyExpirationDate) }
+    
+    this.UseFahrenheit = await this.storage.getItem('UseFahrenheit')
+    if (this.config.debug) { this.log.info('Loaded UseFahrenheit from storage:', this.UseFahrenheit) }
+    
     // Initialize in-memory cache
     if (this.config.cacheGetRequests || this.config.cachePostRequests) {
+      if (this.config.debug) { this.log.info('Initializing request caching') }
       this.cache = new NodeCache({
         useClones: true, // False disables cloning of variables and uses direct references instead (faster than copying)
         deleteOnExpire: true, // Delete after expiration
@@ -272,18 +296,12 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
 
     // Initialize mutex
     if (this.config.enableMutexLock) {
+      if (this.config.debug) { this.log.info('Initializing request mutex locking') }
       this.mutex = new Mutex()
     }
-  }
-
-  async init() {
-    if (this.config.debug) { this.log.info('Asynchronous initialization started') }
-
-    // Initialize storage
-    if (this.config.debug) { this.log.info('Initializing local storage') }
-    await this.storage.init()
 
     if (this.config.debug) { this.log.info('Asynchronous initialization finished') }
+    this.ready = true
   }
 
   async get(url: string, formData?: { [key: string]: unknown }, headers?: { [key: string]: unknown }, skipCache?: boolean): Promise<any> {
@@ -307,6 +325,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
 
     // Return the cached response (if any)
     if (!skipCache && this.cache && this.config.cacheGetRequests && requestHash) {
+      if (this.config.debug) { this.log.info('Checking for cached GET request for hash:', requestHash) }
       const cachedResponseJSON = this.cache.get(requestHash)
       if (cachedResponseJSON) {
         if (this.config.debug) { this.log.info('Returning cached response:', cachedResponseJSON) }
@@ -328,6 +347,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
 
       // Cache the request response
       if (!skipCache && this.cache && this.config.cacheGetRequests && requestHash) {
+        if (this.config.debug) { this.log.info('Storing cached GET request response for hash:', requestHash) }
         this.cache.set(requestHash, responseJSON, this.requestCacheTime)
         if (this.config.debug) { this.log.info('Caching response for', this.requestCacheTime, 'seconds:', responseJSON) }
       }
@@ -336,9 +356,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
     }
 
     // Lock the call until caching is complete and before checking the cache
-    const result = this.config.enableMutexLock && this.mutex ? await this.mutex.runExclusive(apiCall) : await apiCall()
-
-    return result
+    return this.config.enableMutexLock && this.mutex ? this.mutex.runExclusive(apiCall) : apiCall()
   }
 
   async post(url: string, formData?: { [key: string]: unknown }, headers?: { [key: string]: unknown }, body?: unknown, skipCache?: boolean): Promise<any> {
@@ -366,6 +384,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
 
     // Return the cached response (if any)
     if (!skipCache && this.cache && this.config.cachePostRequests && requestHash) {
+      if (this.config.debug) { this.log.info('Checking for cached POST request for hash:', requestHash) }
       const cachedResponseJSON = this.cache.get(requestHash)
       if (cachedResponseJSON && !skipCache) {
         if (this.config.debug) { this.log.info('Returning cached response:', cachedResponseJSON) }
@@ -387,6 +406,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
 
       // Cache the request response
       if (!skipCache && this.cache && this.config.cachePostRequests && requestHash) {
+        if (this.config.debug) { this.log.info('Storing cached POST request response for hash:', requestHash) }
         this.cache.set(requestHash, responseJSON, this.requestCacheTime)
         if (this.config.debug) { this.log.info('Caching response for', this.requestCacheTime, 'seconds:', responseJSON) }
       }
@@ -395,9 +415,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
     }
 
     // Lock the call until caching is complete
-    const result = this.config.enableMutexLock && this.mutex ? await this.mutex.runExclusive(apiCall) : await apiCall()
-
-    return result
+    return this.config.enableMutexLock && this.mutex ? this.mutex.runExclusive(apiCall) : apiCall()
   }
 
   async login(): Promise<ILoginData | null> {
@@ -412,6 +430,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
       this.log.info('No existing login information found, attempting to login with supplied credentials')
     }
 
+    // Process the login response
     const response = await this.post(`${MELCLOUD_API_ROOT}/${MELCLOUD_API_LOGIN}`, {
       AppVersion: '1.19.0.8',
       CaptchaChallenge: '',
@@ -425,22 +444,27 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
       // FIXME: Add proper error handling
       throw new Error(`Failed to login: invalid JSON response: ${JSON.stringify(response)}`)
     }
-    if (this.config.debug) { this.log.info('login -> response:', JSON.stringify(response)) }
-    if (response.LoginData) {
+
+    // Process the login data
+    if (this.config.debug) { this.log.info('Processing login response:', JSON.stringify(response)) }
+    const loginData = response.LoginData
+    if (loginData) {
       // FIXME: This renews the ContextKey on every boot, which should NOT be necessary at all!
-      this.ContextKey = response.LoginData.ContextKey
-      await this.storage.setItem('ContextKey', this.ContextKey)
-      if (response.LoginData.Expiry) {
-        this.ContextKeyExpirationDate = new Date(response.LoginData.Expiry)
+      this.ContextKey = loginData.ContextKey
+      await this.storage.updateItem('ContextKey', this.ContextKey)
+
+      if (loginData.Expiry) {
+        this.ContextKeyExpirationDate = new Date(loginData.Expiry)
         this.ContextKeyExpirationDate.setHours(0)
         this.ContextKeyExpirationDate.setMinutes(0)
         this.ContextKeyExpirationDate.setSeconds(0)
         this.ContextKeyExpirationDate.setMilliseconds(0)
-        await this.storage.setItem('ContextKeyExpirationDate', this.ContextKeyExpirationDate)
+        await this.storage.updateItem('ContextKeyExpirationDate', this.ContextKeyExpirationDate)
       }
+
       // FIXME: This is NEVER updated until ContextKey expires, which takes 1 whole year to happen, unless the plugin or Homebridge is restarted..
-      this.UseFahrenheit = response.LoginData.UseFahrenheit
-      await this.storage.setItem('UseFahrenheit', this.UseFahrenheit)
+      this.UseFahrenheit = loginData.UseFahrenheit
+      await this.storage.updateItem('UseFahrenheit', this.UseFahrenheit)
     } else {
       if (response.ErrorId === IErrorCode.InvalidCredentials) {
         throw new Error(`Login failed due to invalid credentials. Received response: ${JSON.stringify(response)}`)
@@ -448,7 +472,9 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
       // FIXME: Add proper error handling
       throw new Error(`Login failed due to an unknown or unhandled error. Received response: ${JSON.stringify(response)}`)
     }
-    return response.LoginData
+
+    if (this.config.debug) { this.log.info('Login Data response:', JSON.stringify(loginData)) }
+    return loginData
   }
 
   async listDevices(): Promise<Array<IDeviceBuilding>> {
@@ -457,7 +483,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
     // Check if we need to login first
     await this.login()
 
-    // this.log('LIST DEVICES')
+    // Get the list of devices from the API
     const response = await this.get(`${MELCLOUD_API_ROOT}/${MELCLOUD_API_LIST_DEVICES}`, undefined, {
       'X-MitsContextKey': this.ContextKey, 
     }) as Array<IDeviceBuilding>
@@ -465,7 +491,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
       // FIXME: Add proper error handling
       throw new Error(`Failed to list devices: invalid JSON response: ${JSON.stringify(response)}`)
     }
-    if (this.config.debug) { this.log.info('listDevices:', JSON.stringify(response)) }
+    if (this.config.debug) { this.log.info('List Device response:', JSON.stringify(response)) }
     return response
   }
 
@@ -475,7 +501,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
     // Check if we need to login first
     await this.login()
 
-    // this.log('GET DEVICE', deviceId, buildingId)
+    // Get the device from the API
     const response = await this.get(`${MELCLOUD_API_ROOT}/${MELCLOUD_API_GET_DEVICE}?id=${deviceId}&BuildingID=${buildingId}`, undefined, {
       'X-MitsContextKey': this.ContextKey, 
     }) as IDeviceDetails
@@ -495,7 +521,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
     // Check if we need to login first
     await this.login()
 
-    // this.log('UPDATE OPTIONS', useFahrenheit)
+    // Post the updated options to the API
     // FIXME: Why were we trying to send this as a string instead of as an object, like every other request?
     const response = await this.post(`${MELCLOUD_API_ROOT}/${MELCLOUD_API_UPDATE_OPTIONS}`, {
       // FIXME: Most of these properties seem either incorrect or unnecessary
@@ -526,7 +552,7 @@ export class MELCloudAPIClient implements IMELCloudAPIClient {
     // Check if we need to login first
     await this.login()
 
-    // this.log('SET DEVICE DATA', data)
+    // Post the updated device data to the API
     const response = await this.post(`${MELCLOUD_API_ROOT}/${MELCLOUD_API_SET_DEVICE}`, undefined, {
       'X-MitsContextKey': this.ContextKey, 'content-type': 'application/json', 
     }, data, true) as IDeviceDetails

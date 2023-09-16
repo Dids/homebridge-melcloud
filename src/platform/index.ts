@@ -151,22 +151,17 @@ export default class MELCloudPlatform implements IMELCloudPlatform {
      * after this event was fired, in order to ensure they weren't added to homebridge already.
      * This event can also be used to start discovery of new accessories.
      */
-    this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
+    this.api.on(APIEvent.DID_FINISH_LAUNCHING, async () => {
       if (this.config.debug) { this.log.info('Executed didFinishLaunching callback') }
 
-      this.client.init()
-        .then(() => {
-          // run the method to discover / register your devices as accessories
-          this.discoverDevices()
-            .then(() => {
-              if (this.config.debug) { this.log.info('Device discovery successful') }
-            })
-            .catch((err: Error) => {
-              this.log.error('Device discovery failed:', err)
-            })
-        })
+      await this.client.init()
         .catch((err: Error) => {
           this.log.error('Failed to initialize MELCloud API client:', err)
+        })
+        
+      await this.discoverDevices()
+        .catch((err: Error) => {
+          this.log.error('Device discovery failed:', err)
         })
     })
   }
