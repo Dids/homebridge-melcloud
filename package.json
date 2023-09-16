@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge MELCloud",
   "name": "homebridge-melcloud-ts",
-  "version": "0.6.0-rc6",
+  "version": "0.6.0-rc7",
   "publishConfig": {
     "tag": "rc"
   },
